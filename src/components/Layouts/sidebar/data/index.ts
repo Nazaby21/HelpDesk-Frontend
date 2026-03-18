@@ -24,7 +24,20 @@ const categoryIcons: Record<string, any> = {
   "IT System Issue": Monitor,
 };
 
-export const getNavData = (role: UserRole) => {
+export interface NavItem {
+  title: string;
+  url: string;
+  icon: any;
+  roles: string[];
+  items: NavItem[];
+}
+
+export interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+export const getNavData = (role: UserRole): NavSection[] => {
   if (role === "user") {
     return [
       {
@@ -34,7 +47,7 @@ export const getNavData = (role: UserRole) => {
           url: `/incident-catalog?category=${encodeURIComponent(category)}`,
           icon: categoryIcons[category] || LayoutGrid,
           roles: ["user"],
-          items: [],
+          items: [] as any[],
         })),
       },
     ];
@@ -49,28 +62,28 @@ export const getNavData = (role: UserRole) => {
           url: "/",
           icon: Icons.HomeIcon,
           roles: ["admin", "technician"],
-          items: [],
+          items: [] as any[],
         },
         {
           title: "User Management",
-          url: "/user-management",
+          url: "/users",
           icon: Icons.User,
           roles: ["admin"],
-          items: [],
+          items: [] as any[],
         },
         {
           title: "View All Ticket",
           url: "/tickets",
           icon: Icons.Table,
           roles: ["admin", "technician"],
-          items: [],
+          items: [] as any[],
         },
         {
           title: "Incident Catalog",
           url: "/incident-catalog",
           icon: Icons.Alphabet,
           roles: ["admin", "technician", "user"],
-          items: [],
+          items: [] as any[],
         },
       ],
     },
