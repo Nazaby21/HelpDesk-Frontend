@@ -5,7 +5,7 @@ import type { RootState } from "./store";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: typeof window === "undefined" 
-    ? "http://localhost:8080/api/v1/"  // SSR requests go directly to backend
+    ? `${process.env.API_URL || "http://localhost:8080"}/api/v1/`  // SSR requests go directly to backend
     : "/api/v1/", // Client requests use Next.js proxy to avoid CORS
   credentials: "include", // Allow cookie propagation if backend requires it for refresh token
   prepareHeaders: (headers, { getState, endpoint }) => {
