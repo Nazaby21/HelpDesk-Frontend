@@ -1,42 +1,23 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React from "react";
+import { useAppSelector } from "@/redux/hooks";
+import { selectCurrentRole } from "@/redux/feature/auth/authSlice";
+import { store } from "@/redux/store";
+import type { RootState } from "@/redux/store";
 
-export type UserRole = "admin" | "technician" | "user";
-
-interface RoleContextProps {
-  role: UserRole;
-  setRole: (role: UserRole) => void;
-}
-
-const RoleContext = createContext<RoleContextProps | undefined>(undefined);
+export type UserRole = "ADMIN" | "TECHNICIAN" | "USER" | string;
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<UserRole>("admin");
-
-  useEffect(() => {
-    const savedRole = localStorage.getItem("userRole") as UserRole;
-    if (savedRole && ["admin", "technician", "user"].includes(savedRole)) {
-      setRoleState(savedRole);
-    }
-  }, []);
-
-  const setRole = (newRole: UserRole) => {
-    setRoleState(newRole);
-    localStorage.setItem("userRole", newRole);
-  };
-
-  return (
-    <RoleContext.Provider value={{ role, setRole }}>
-      {children}
-    </RoleContext.Provider>
-  );
+  return <>{children}</>;
 }
 
 export function useRole() {
-  const context = useContext(RoleContext);
-  if (context === undefined) {
-    throw new Error("useRole must be used within a RoleProvider");
-  }
-  return context;
+  const role = useAppSelector(selectCurrentRole) as UserRole;
+  
+  const setRole = (newRole: UserRole) => {
+    console.warn("Manual role assignment is disabled. Roles originate from the backend API.");
+  };
+
+  return { role: role?.toLowerCase() || "user", setRole };
 }

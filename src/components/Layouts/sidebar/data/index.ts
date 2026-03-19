@@ -79,6 +79,13 @@ export const getNavData = (role: UserRole): NavSection[] => {
           items: [] as any[],
         },
         {
+          title: "View History",
+          url: "/user/history",
+          icon: AlertTriangle,
+          roles: ["technician", "admin"],
+          items: [] as any[],
+        },
+        {
           title: "Incident Catalog",
           url: "/incident-catalog",
           icon: Icons.Alphabet,

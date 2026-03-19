@@ -27,9 +27,22 @@ const nextConfig = {
         protocol: "https",
         hostname: "i.pravatar.cc",
         port: ""
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+        port: ""
       }
     ]
-  }
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: "http://localhost:8080/api/v1/:path*", // Proxy to Spring Boot Backend
+      },
+    ];
+  },
 };
 
 export default nextConfig;

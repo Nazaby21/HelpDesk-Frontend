@@ -11,7 +11,7 @@ export interface User {
   role: string;
   lastActive: string;
   dateAdded: string;
-  avatar: string;
+  avatar: string | null;
 }
 
 interface UserRowProps {
@@ -30,13 +30,22 @@ export function UserRow({ user, onActionClick }: UserRowProps) {
     <TableRow>
       <TableCell>
         <div className="flex items-center gap-3">
-          <Image
-            src={user.avatar}
-            alt={user.name}
-            width={32}
-            height={32}
-            className="rounded-full bg-gray-100 object-cover"
-          />
+          {user.avatar ? (
+            <Image
+              src={user.avatar}
+              alt={user.name}
+              width={32}
+              height={32}
+              className="rounded-full bg-gray-100 object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700"
+              aria-label={user.name}
+            >
+              {user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+            </div>
+          )}
           <div>
             <div className="font-semibold text-gray-900">{user.name}</div>
             <div className="text-xs text-gray-500">{user.email}</div>

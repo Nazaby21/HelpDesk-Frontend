@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
     "@stomp/stompjs": "^7.3.0",
     "apexcharts": "^4.5.0",
     "class-variance-authority": "^0.7.1",
@@ -23,6 +24,7 @@
     "react": "^19.2.0",
     "react-apexcharts": "^1.7.0",
     "react-dom": "^19.2.0",
+    "react-redux": "^9.2.0",
     "sockjs-client": "^1.6.1",
     "tailwind-merge": "^2.6.0"
   },

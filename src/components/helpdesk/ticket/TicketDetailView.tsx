@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { TicketHeader } from "@/components/Helpdesk/ticket/TicketHeader";
 import { TicketDescription } from "@/components/Helpdesk/ticket/TicketDescription";
@@ -6,6 +8,7 @@ import { ConversationPanel } from "@/components/Helpdesk/ticket/ConversationPane
 import { TicketSidebar } from "@/components/Helpdesk/ticket/TicketSidebar";
 import { RequesterProfileCard } from "@/components/Helpdesk/ticket/RequesterProfileCard";
 import { AssignmentFields } from "@/components/Helpdesk/ticket/AssignmentFields";
+import { useAppSelector } from "@/redux/hooks";
 
 interface TicketDetailViewProps {
   id: string;
@@ -14,15 +17,17 @@ interface TicketDetailViewProps {
 }
 
 export function TicketDetailView({ id, incidentTitle, incidentCategory }: TicketDetailViewProps) {
+  const { user } = useAppSelector((state: any) => state.auth);
+
   return (
     <div className="min-h-screen pb-12 w-full max-w-7xl mx-auto">
       <TicketHeader
-        id={id.padStart(4, "683")} // Mock ID to match #6837 style if needed, or just use `id`
-        title={`Request ${incidentCategory.replace("Issue", "")} for ${incidentTitle}`}
-        creatorName="Zaby"
-        createdDate="Jul 31, 2024 04:35 PM"
-        dueDate="Aug 1, 2024 08:20 AM"
-        assignedTeam="IT Support Team"
+        id={id.padStart(4, "0")} 
+        title={`Request for ${incidentTitle}`}
+        creatorName={user ? `${user.firstName} ${user.lastName}` : "Current User"}
+        createdDate={new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
+        dueDate="Pending Review"
+        assignedTeam={incidentCategory || "Support"}
       />
 
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

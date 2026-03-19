@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Search, Filter, Plus } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Table, TableHeader, TableHead, TableBody } from "@/components/ui/table";
+import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { TicketRow, Ticket } from "./TicketRow";
+import { useRole } from "@/app/role-context";
 
 interface TicketTableProps {
   tickets: Ticket[];
@@ -11,6 +12,7 @@ interface TicketTableProps {
   onCreateClick?: () => void;
   onFilterClick?: () => void;
   onSearchChange?: (value: string) => void;
+  hideAssignedTo?: boolean;
 }
 
 export function TicketTable({
@@ -19,8 +21,12 @@ export function TicketTable({
   onCreateClick,
   onFilterClick,
   onSearchChange,
+  hideAssignedTo = false,
 }: TicketTableProps) {
+  const { role } = useRole();
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const canCreateTicket = true; // Wait, actually I will just let true for now, but prompt states: Update UI components... to use useRole(). So:
+  const isAuthorizedToCreate = role === 'admin' || role === 'user';
 
   return (
     <>
@@ -59,27 +65,31 @@ export function TicketTable({
           </Button>
 
           {/* Create Ticket */}
-          <Button
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={onCreateClick}
-            className="w-full sm:w-auto"
-          >
-            Create Ticket
-          </Button>
+          {isAuthorizedToCreate && (
+            <Button
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={onCreateClick}
+              className="w-full sm:w-auto"
+            >
+              Create Ticket
+            </Button>
+          )}
         </div>
       </div>
 
       <Table>
         <TableHeader>
-          <TableHead className="whitespace-nowrap">Ticket ID</TableHead>
-          <TableHead>Title</TableHead>
-          <TableHead>Requester</TableHead>
-          <TableHead>Department</TableHead>
-          <TableHead>Priority</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Assigned To</TableHead>
-          <TableHead className="whitespace-nowrap">Created Date</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
+          <TableRow>
+            <TableHead className="whitespace-nowrap">Ticket ID</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Requester</TableHead>
+            <TableHead>Department</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Status</TableHead>
+            {!hideAssignedTo && <TableHead>Assigned To</TableHead>}
+            <TableHead className="whitespace-nowrap">Created Date</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
         </TableHeader>
         <TableBody>
           {tickets.map((ticket) => (
@@ -89,6 +99,7 @@ export function TicketTable({
               activeMenuId={activeMenuId}
               onMenuToggle={setActiveMenuId}
               onActionClick={onActionClick}
+              hideAssignedTo={hideAssignedTo}
             />
           ))}
         </TableBody>

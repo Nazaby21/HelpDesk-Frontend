@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Toast } from "@/components/ui/Toast";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { useGetTicketByIdQuery } from "@/redux/feature/ticket/ticketApi";
 
 export default function TicketDetail() {
   const params = useParams();
@@ -12,34 +14,44 @@ export default function TicketDetail() {
   const ticketId = params.id as string;
   const [showToast, setShowToast] = useState(false);
 
-  // In a real app, you would fetch the ticket details based on ticketId
-  const ticket = {
-    id: `TCK-${ticketId}`,
-    title: "Cannot access company VPN",
-    description:
-      "I keep getting an 'Authentication Failed' error when trying to connect to the US-East VPN server. My password works for email but not the VPN client.",
-    requester: { name: "Sarah Doe", email: "sarah@example.com" },
-    department: "IT",
-    priority: "High",
-    status: "Pending",
-    assignedTo: { name: "John Smith" },
-    created: "Oct 24, 2024 at 09:41 AM",
-    lastUpdated: "Oct 24, 2024 at 10:15 AM",
-  };
+  const { data: ticketResponse, isLoading } = useGetTicketByIdQuery(ticketId);
+
+  const ticket = React.useMemo(() => {
+    if (!ticketResponse) return null;
+    let status = "Pending";
+    if (ticketResponse.logs && ticketResponse.logs.length > 0) {
+      const lastAction = ticketResponse.logs[ticketResponse.logs.length - 1].action;
+      if (lastAction === "RESOLVE" || lastAction === "CLOSED") status = "Completed";
+      else if (lastAction === "ASSIGN" || lastAction === "IN_PROGRESS" || lastAction === "UPDATE") status = "In Progress";
+    }
+    return {
+      id: `#TCK-${ticketResponse.id.toString().padStart(3, "0")}`,
+      title: ticketResponse.ticketTitle || "Untitled Ticket",
+      description: ticketResponse.description || "No description provided.",
+      requester: { name: "Requester", email: "" }, 
+      department: ticketResponse.categoryName || "General",
+      priority: ticketResponse.priority || "Medium",
+      status,
+      assignedTo: ticketResponse.assignedName ? { name: ticketResponse.assignedName } : null,
+      created: new Date(ticketResponse.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    };
+  }, [ticketResponse]);
+
+  if (isLoading) return <div className="p-8">Loading ticket details...</div>;
+  if (!ticket) return <div className="p-8">Ticket not found</div>;
 
   return (
-    <div className="flex-1 bg-white p-4 md:p-6 font-inter">
-      <div className="mx-auto w-full max-w-4xl">
-        <button
-          onClick={() => router.back()}
-          className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to tickets
-        </button>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+    <>
+      <div className="mx-auto w-full">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           {/* Header */}
+          <button
+            onClick={() => router.back()}
+            className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to tickets
+          </button>
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-3">
@@ -112,6 +124,6 @@ export default function TicketDetail() {
         onClose={() => setShowToast(false)}
         message="Ticket successfully assigned"
       />
-    </div>
+    </>
   );
 }

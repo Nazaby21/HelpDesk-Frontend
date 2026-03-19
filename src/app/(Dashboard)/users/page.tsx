@@ -1,44 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Pagination } from "@/components/ui/Pagination";
 import { UserTable } from "@/components/Users/UserTable";
+import { User } from "@/components/Users/UserRow";
 import { Toast } from "@/components/ui/Toast";
-
-// Mock Data
-const users = [
-  {
-    id: 1,
-    name: "Amélie Laurent",
-    email: "amelie@example.com",
-    role: "Admin",
-    lastActive: "Oct 24, 2024",
-    dateAdded: "Oct 24, 2024",
-    avatar: "https://i.pravatar.cc/150?u=amelie",
-  },
-  {
-    id: 2,
-    name: "John Smith",
-    email: "john@example.com",
-    role: "Technician",
-    lastActive: "Oct 23, 2024",
-    dateAdded: "Oct 20, 2024",
-    avatar: "https://i.pravatar.cc/150?u=john",
-  },
-  {
-    id: 3,
-    name: "Sarah Doe",
-    email: "sarah@example.com",
-    role: "User",
-    lastActive: "Oct 22, 2024",
-    dateAdded: "Oct 15, 2024",
-    avatar: "https://i.pravatar.cc/150?u=sarah",
-  },
-];
+import { useGetUsersQuery } from "@/redux/feature/user/userApi";
 
 export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showToast, setShowToast] = useState(false);
+
+  const { data: userResponses = [], isLoading } = useGetUsersQuery();
+
+  const users: User[] = useMemo(() => {
+    return userResponses.map((ur) => ({
+      id: ur.id,
+      name: `${ur.firstName} ${ur.lastName}`,
+      email: ur.email,
+      role: ur.role,
+      lastActive: "Just now",
+      dateAdded: "N/A",
+      avatar: ur.imageUrl || null,
+    }));
+  }, [userResponses]);
+
+  if (isLoading) return <div className="p-8">Loading users...</div>;
 
   return (
       <div className="mx-auto w-full">

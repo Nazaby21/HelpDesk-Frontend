@@ -3,7 +3,7 @@ import { Search, Filter, Plus } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Table, TableHeader, TableHead, TableBody } from "@/components/ui/table";
+import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { UserRow, User } from "./UserRow";
 
 interface UserTableProps {
@@ -76,11 +76,13 @@ export function UserTable({
 
       <Table>
         <TableHeader>
-          <TableHead>User</TableHead>
-          <TableHead>Access</TableHead>
-          <TableHead>Last active</TableHead>
-          <TableHead>Date added</TableHead>
-          <TableHead className="text-right"></TableHead>
+          <TableRow>
+            <TableHead>User</TableHead>
+            <TableHead>Access</TableHead>
+            <TableHead>Last active</TableHead>
+            <TableHead>Date added</TableHead>
+            <TableHead className="text-right"></TableHead>
+          </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => (

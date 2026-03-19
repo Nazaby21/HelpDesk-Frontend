@@ -16,7 +16,6 @@ export default function AddUserPage() {
   };
 
   return (
-    <div className="flex-1 bg-white md:p-6 p-4">
       <div className="mx-auto w-full relative">
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           {/* Header Section */}
@@ -45,6 +44,5 @@ export default function AddUserPage() {
           </div>
         )}
       </div>
-    </div>
   );
 }

@@ -7,7 +7,7 @@ export async function OverviewCardsGroup() {
   const { tickets, pendingTickets, completedTickets, users } = await getOverviewData();
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4 2xl:gap-7.5">
       <OverviewCard
         label="Total Ticket"
         data={{

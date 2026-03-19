@@ -1,7 +1,6 @@
 import { PaymentsOverview } from "@/components/Charts/payments-overview";
 import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
 import { Suspense } from "react";
-import { ChatsCard } from "@/components/Dashboard/chats-card";
 import { OverviewCardsGroup } from "@/components/Dashboard/overview-cards";
 import { OverviewCardsSkeleton } from "@/components/Dashboard/overview-cards/skeleton";
 
@@ -27,10 +26,6 @@ export default async function Home({ searchParams }: PropsType) {
           key={extractTimeFrame("payments_overview")}
           timeFrame={extractTimeFrame("payments_overview")?.split(":")[1]}
         />
-
-        <Suspense fallback={null}>
-          <ChatsCard />
-        </Suspense>
       </div>
     </>
   );

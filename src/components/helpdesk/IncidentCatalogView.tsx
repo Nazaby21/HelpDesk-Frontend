@@ -1,6 +1,7 @@
 "use client";
 
 import { CategoryGrid } from "@/components/Helpdesk/CategoryGrid";
+import { CreateCategoryModal } from "@/components/Helpdesk/CreateCategoryModal";
 import { IncidentList } from "@/components/Helpdesk/IncidentList";
 import { Sidebar } from "@/components/Helpdesk/Sidebar";
 import { INCIDENT_TEMPLATES } from "@/data/incidents";
@@ -13,9 +14,11 @@ export function IncidentCatalogView() {
   const categoryParam = searchParams.get("category");
   const { role } = useRole();
   const isAgentOrAdmin = role === "technician" || role === "admin";
+
   const [activeCategory, setActiveCategory] = useState<string | null>(
     categoryParam || (isAgentOrAdmin ? null : "IT Support Issue")
   );
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
 
   useEffect(() => {
     if (categoryParam) {
@@ -40,8 +43,13 @@ export function IncidentCatalogView() {
           />
         )}
         <div className="flex-1 min-w-0">
-          {(!activeCategory && showGridHome) ? (
-            <CategoryGrid onCategorySelect={setActiveCategory} />
+          {!activeCategory && showGridHome ? (
+            <CategoryGrid
+              onCategorySelect={setActiveCategory}
+              onCreateCategory={
+                isAgentOrAdmin ? () => setShowCreateCategory(true) : undefined
+              }
+            />
           ) : (
             <IncidentList
               incidents={filteredIncidents}
@@ -52,6 +60,14 @@ export function IncidentCatalogView() {
           )}
         </div>
       </div>
+
+      {/* Create Category Modal — only rendered for admin/technician */}
+      {isAgentOrAdmin && (
+        <CreateCategoryModal
+          isOpen={showCreateCategory}
+          onClose={() => setShowCreateCategory(false)}
+        />
+      )}
     </>
   );
 }

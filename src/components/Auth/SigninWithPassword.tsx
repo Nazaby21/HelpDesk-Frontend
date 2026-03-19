@@ -4,6 +4,11 @@ import Link from "next/link";
 import React, { useState } from "react";
 import InputGroup from "../FormElements/InputGroup";
 import { Checkbox } from "../FormElements/checkbox";
+import { useLoginMutation } from "@/redux/feature/auth/authApi";
+import { useAppDispatch } from "@/redux/hooks";
+import { setUser } from "@/redux/feature/auth/authSlice";
+import { setToken } from "@/redux/feature/auth/tokenSlice";
+import { useRouter } from "next/navigation";
 
 export default function SigninWithPassword() {
   const [data, setData] = useState({
@@ -12,28 +17,49 @@ export default function SigninWithPassword() {
     remember: false,
   });
 
-  const [loading, setLoading] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
       ...data,
       [e.target.name]: e.target.value,
     });
+    setErrorMsg("");
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMsg("");
 
-    // You can remove this code block
-    setLoading(true);
+    try {
+      const result = await login({ email: data.email, password: data.password }).unwrap();
+      
+      dispatch(setToken(result.accessToken));
+      dispatch(
+        setUser({
+          user: result.user,
+          refreshToken: result.refreshToken,
+        })
+      );
 
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+      router.push("/");
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      setErrorMsg(err?.data?.message || "Failed to sign in. Please check your credentials.");
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
+      {errorMsg && (
+        <div className="mb-4 rounded-lg bg-red-100 p-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-500">
+          {errorMsg}
+        </div>
+      )}
+
       <InputGroup
         type="email"
         label="Email"
@@ -82,10 +108,11 @@ export default function SigninWithPassword() {
       <div className="mb-4.5">
         <button
           type="submit"
-          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary p-4 font-medium text-white transition hover:bg-opacity-90"
+          disabled={isLoading}
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary p-4 font-medium text-white transition hover:bg-opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           Sign In
-          {loading && (
+          {isLoading && (
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent dark:border-primary dark:border-t-transparent" />
           )}
         </button>

@@ -12,14 +12,21 @@ import Link from "next/link";
 import { useState } from "react";
 import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
 import { useRole } from "@/app/role-context";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { selectCurrentUser, clearAuth } from "@/redux/feature/auth/authSlice";
+import { clearToken } from "@/redux/feature/auth/tokenSlice";
+import { useLogoutMutation } from "@/redux/feature/auth/authApi";
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
-  const { role, setRole } = useRole();
+  const { role } = useRole();
+  const currentUser = useAppSelector(selectCurrentUser);
+  const dispatch = useAppDispatch();
+  const [logoutApi] = useLogoutMutation();
 
   const USER = {
-    name: "John Smith",
-    email: "johnson@nextadmin.com",
+    name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "API User",
+    email: currentUser?.email || "user@example.com",
     img: "/images/user/user-03.png",
   };
 
@@ -80,28 +87,6 @@ export function UserInfo() {
         </figure>
 
         <hr className="border-[#E8E8E8] dark:border-dark-3" />
-        
-        <div className="p-4">
-          <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 block">Switch Role (Mock)</span>
-          <div className="flex flex-col gap-2">
-            {(["admin", "technician", "user"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                className={cn(
-                  "px-3 py-1.5 text-xs text-left rounded-md border transition-colors",
-                  role === r
-                    ? "bg-primary text-white border-primary"
-                    : "bg-transparent text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-dark-3"
-                )}
-              >
-                {r.charAt(0).toUpperCase() + r.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <hr className="border-[#E8E8E8] dark:border-dark-3" />
 
         <div className="p-2 text-base text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
           <Link
@@ -132,7 +117,13 @@ export function UserInfo() {
         <div className="p-2 text-base text-[#4B5563] dark:text-dark-6">
           <button
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              logoutApi().finally(() => {
+                dispatch(clearAuth());
+                dispatch(clearToken());
+              });
+            }}
           >
             <LogOutIcon />
 
