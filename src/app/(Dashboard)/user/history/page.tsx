@@ -57,7 +57,7 @@ export default function UserHistoryPage() {
             tickets={tickets}
             onActionClick={handleActionClick}
             onCreateClick={() => router.push("/incident-catalog")}
-            onFilterClick={() => console.log("Filter")}
+            onStatusFilterChange={(status) => console.log("Filter", status)}
             onSearchChange={(val) => console.log("Search", val)}
           />
 
