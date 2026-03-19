@@ -53,7 +53,7 @@ export function AddUserForm({ onSubmit, onCancel }: AddUserFormProps) {
       firstName: firstNameRef.current?.value || "",
       lastName: lastNameRef.current?.value || "",
       email: emailRef.current?.value || "",
-      phone: phoneRef.current?.value || "",
+      phoneNumber: phoneRef.current?.value || "",
       password: passwordRef.current?.value || "",
       role: roleRef.current?.value || "",
       departmentId: selectedDeptId || undefined,

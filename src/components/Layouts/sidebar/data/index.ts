@@ -38,20 +38,6 @@ export interface NavSection {
 }
 
 export const getNavData = (role: UserRole): NavSection[] => {
-  if (role === "user") {
-    return [
-      {
-        label: "INCIDENT CATALOG",
-        items: INCIDENT_CATEGORIES.map((category) => ({
-          title: category,
-          url: `/incident-catalog?category=${encodeURIComponent(category)}`,
-          icon: categoryIcons[category] || LayoutGrid,
-          roles: ["user"],
-          items: [] as any[],
-        })),
-      },
-    ];
-  }
 
   const allItems = [
     {
@@ -86,10 +72,17 @@ export const getNavData = (role: UserRole): NavSection[] => {
           items: [] as any[],
         },
         {
+          title: "Category Management",
+          url: "/categories",
+          icon: LayoutGrid,
+          roles: ["admin", "technician"],
+          items: [] as any[],
+        },
+        {
           title: "Incident Catalog",
           url: "/incident-catalog",
           icon: Icons.Alphabet,
-          roles: ["admin", "technician", "user"],
+          roles: ["admin", "technician"],
           items: [] as any[],
         },
       ],

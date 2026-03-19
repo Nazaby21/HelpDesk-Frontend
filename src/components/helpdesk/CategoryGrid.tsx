@@ -23,7 +23,6 @@ interface CategoryGridProps {
 }
 
 const categoryIcons: Record<string, React.ElementType> = {
-  "IT Database Administration Issue": Database,
   "IT Incident Management": AlertTriangle,
   "IT In-House System Issue": Server,
   "IT MIS & Analytics Issue": Activity,

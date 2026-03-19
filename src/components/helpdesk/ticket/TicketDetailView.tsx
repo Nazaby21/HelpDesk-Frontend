@@ -1,56 +1,128 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { TicketHeader } from "@/components/Helpdesk/ticket/TicketHeader";
 import { TicketDescription } from "@/components/Helpdesk/ticket/TicketDescription";
 import { FileUploadBox } from "@/components/Helpdesk/ticket/FileUploadBox";
-import { ConversationPanel } from "@/components/Helpdesk/ticket/ConversationPanel";
-import { TicketSidebar } from "@/components/Helpdesk/ticket/TicketSidebar";
-import { RequesterProfileCard } from "@/components/Helpdesk/ticket/RequesterProfileCard";
-import { AssignmentFields } from "@/components/Helpdesk/ticket/AssignmentFields";
+import { Toast } from "@/components/ui/Toast";
 import { useAppSelector } from "@/redux/hooks";
+import { useCreateTicketMutation } from "@/redux/feature/ticket/ticketApi";
+import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
 
 interface TicketDetailViewProps {
   id: string;
-  incidentTitle: string;
-  incidentCategory: string;
 }
 
-export function TicketDetailView({ id, incidentTitle, incidentCategory }: TicketDetailViewProps) {
+export function TicketDetailView({ id }: TicketDetailViewProps) {
+  const router = useRouter();
   const { user } = useAppSelector((state: any) => state.auth);
+  const [description, setDescription] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [priority, setPriority] = useState("MEDIUM");
+
+  const { data: categories = [] } = useGetCategoriesQuery();
+  const [createTicket, { isLoading: isSubmitting }] = useCreateTicketMutation();
+
+  // Find the subcategory using the 'id' passed from the route
+  let selectedMainCategory = null;
+  let selectedSubCategory = null;
+
+  for (const main of categories) {
+    const sub = main.subCategories?.find((sub: any) => sub.id.toString() === id);
+    if (sub) {
+      selectedMainCategory = main;
+      selectedSubCategory = sub;
+      break;
+    }
+  }
+
+  const incidentTitle = selectedSubCategory ? selectedSubCategory.name : "Issue";
+  const incidentCategory = selectedMainCategory ? selectedMainCategory.name : "";
+
+  const handleSubmit = async () => {
+    if (!description.trim()) {
+      setIsError(true);
+      setToastMessage("Please enter a description for the ticket.");
+      setShowToast(true);
+      return;
+    }
+
+    if (!selectedMainCategory || !selectedSubCategory) {
+      setIsError(true);
+      setToastMessage("Invalid category mapping. Please try again.");
+      setShowToast(true);
+      return;
+    }
+
+    try {
+      const response = await createTicket({
+        ticketTitle: incidentTitle,
+        description,
+        categoryId: Number(selectedMainCategory.id),
+        subCategoryId: Number(selectedSubCategory.id),
+        priority,
+        status: "PENDING",
+      }).unwrap();
+
+      setIsError(false);
+      setToastMessage("Ticket submitted successfully!");
+      setShowToast(true);
+
+      setTimeout(() => {
+        router.push(`/tickets/${response.id}`);
+      }, 1500);
+    } catch (err: any) {
+      console.error("Failed to submit ticket:", err);
+      setIsError(true);
+      setToastMessage(err?.data?.message || "Failed to submit ticket. Please try again.");
+      setShowToast(true);
+    }
+  };
 
   return (
-    <div className="min-h-screen pb-12 w-full max-w-7xl mx-auto">
-      <TicketHeader
-        id={id.padStart(4, "0")} 
-        title={`Request for ${incidentTitle}`}
-        creatorName={user ? `${user.firstName} ${user.lastName}` : "Current User"}
-        createdDate={new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
-        dueDate="Pending Review"
-        assignedTeam={incidentCategory || "Support"}
-      />
+    <>
+      <div className="min-h-screen pb-12 w-full max-w-7xl mx-auto">
+        <TicketHeader
+          id=""
+          title={`Request ${incidentCategory.replace("Issue", "")} for ${incidentTitle}`}
+          creatorName={user ? `${user.firstName} ${user.lastName}` : "Current User"}
+          createdDate={new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          dueDate="Pending Review"
+          assignedTeam={incidentCategory || "Support"}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Column: Main Content (2/3 width on large screens) */}
-        <div className="lg:col-span-2">
-          {/* <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 px-6 py-2">
-            <TicketTabs />
-          </div> */}
-          
-          <div className="space-y-6">
-            <AssignmentFields />
-            <TicketDescription />
-            <FileUploadBox />
-            <ConversationPanel />
+        <div className="mt-8 max-w-3xl space-y-6">
+          <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Ticket Priority
+            </h3>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-800 dark:focus:border-white dark:text-white"
+            >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
           </div>
-        </div>
-
-        {/* Right Column: Sidebar (1/3 width on large screens) */}
-        <div className="lg:col-span-1 space-y-6">
-          <TicketSidebar />
-          <RequesterProfileCard />
+          
+          <TicketDescription value={description} onChange={setDescription} />
+          <FileUploadBox />
         </div>
       </div>
-    </div>
+
+      <Toast 
+        isOpen={showToast} 
+        onClose={() => setShowToast(false)} 
+        message={toastMessage} 
+      />
+    </>
   );
 }
+

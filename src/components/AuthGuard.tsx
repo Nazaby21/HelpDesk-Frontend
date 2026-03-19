@@ -16,10 +16,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const isLoginPath = pathname.startsWith("/auth/sign-in");
     const isDashboardPath = pathname === "/";
 
-    // If there's no token or no user, redirect to login unless already on login page
-    if ((!token || !isAuthenticated || !user) && !isLoginPath) {
+    // If not authenticated or no user, redirect to login unless already on login page
+    if ((!isAuthenticated || !user) && !isLoginPath) {
       router.push("/auth/sign-in");
-    } else if (token && isAuthenticated && user) {
+    } else if (isAuthenticated && user) {
       const isRoleUser = user.role?.toUpperCase() === "USER";
       if (isLoginPath) {
         // If user is logged in and tries to access login page, redirect based on role

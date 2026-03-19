@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Filter, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
@@ -10,7 +10,7 @@ interface TicketTableProps {
   tickets: Ticket[];
   onActionClick: (action: string, ticket: Ticket) => void;
   onCreateClick?: () => void;
-  onFilterClick?: () => void;
+  onStatusFilterChange?: (status: string) => void;
   onSearchChange?: (value: string) => void;
   hideAssignedTo?: boolean;
 }
@@ -19,13 +19,12 @@ export function TicketTable({
   tickets,
   onActionClick,
   onCreateClick,
-  onFilterClick,
+  onStatusFilterChange,
   onSearchChange,
   hideAssignedTo = false,
 }: TicketTableProps) {
   const { role } = useRole();
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const canCreateTicket = true; // Wait, actually I will just let true for now, but prompt states: Update UI components... to use useRole(). So:
   const isAuthorizedToCreate = role === 'admin' || role === 'user';
 
   return (
@@ -54,15 +53,16 @@ export function TicketTable({
             />
           </div>
 
-          {/* Filter */}
-          <Button
-            variant="outline"
-            leftIcon={<Filter className="h-4 w-4" />}
-            onClick={onFilterClick}
-            className="w-full sm:w-auto"
+          {/* Filter Status */}
+          <select
+            onChange={(e) => onStatusFilterChange?.(e.target.value)}
+            className="w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            Filters
-          </Button>
+            <option value="ALL">All Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
 
           {/* Create Ticket */}
           {isAuthorizedToCreate && (

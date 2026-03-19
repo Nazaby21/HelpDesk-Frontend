@@ -20,11 +20,7 @@ export default async function EditTicketPage({ params }: PageProps) {
   return (
     <>
       <Breadcrumb pageName="Edit Ticket" />
-      <TicketDetailView
-        id={id}
-        incidentTitle={ticketTitle}
-        incidentCategory={category}
-      />
+      <TicketDetailView id={id} />
     </>
   );
 }

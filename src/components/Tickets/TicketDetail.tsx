@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Clock, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Toast } from "@/components/ui/Toast";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { useGetTicketByIdQuery } from "@/redux/feature/ticket/ticketApi";
+import { TicketChat } from "./TicketChat";
 
 export default function TicketDetail() {
   const params = useParams();
@@ -18,13 +18,14 @@ export default function TicketDetail() {
 
   const ticket = React.useMemo(() => {
     if (!ticketResponse) return null;
-    let status = "Pending";
-    if (ticketResponse.logs && ticketResponse.logs.length > 0) {
-      const lastAction = ticketResponse.logs[ticketResponse.logs.length - 1].action;
-      if (lastAction === "RESOLVE" || lastAction === "CLOSED") status = "Completed";
-      else if (lastAction === "ASSIGN" || lastAction === "IN_PROGRESS" || lastAction === "UPDATE") status = "In Progress";
-    }
+    const statusMap: Record<string, string> = {
+      PENDING: "Pending",
+      IN_PROGRESS: "In Progress",
+      COMPLETED: "Completed",
+    };
+    const status = statusMap[ticketResponse.status] ?? ticketResponse.status;
     return {
+      rawId: ticketResponse.id.toString(),
       id: `#TCK-${ticketResponse.id.toString().padStart(3, "0")}`,
       title: ticketResponse.ticketTitle || "Untitled Ticket",
       description: ticketResponse.description || "No description provided.",
@@ -33,7 +34,9 @@ export default function TicketDetail() {
       priority: ticketResponse.priority || "Medium",
       status,
       assignedTo: ticketResponse.assignedName ? { name: ticketResponse.assignedName } : null,
-      created: new Date(ticketResponse.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      created: ticketResponse.createdAt
+        ? new Date(ticketResponse.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : "Unknown",
     };
   }, [ticketResponse]);
 
@@ -116,6 +119,9 @@ export default function TicketDetail() {
               <p>{ticket.description}</p>
             </div>
           </div>
+          
+          {/* Real-time Ticket Chat */}
+          <TicketChat ticketId={ticket.rawId} />
         </div>
       </div>
 

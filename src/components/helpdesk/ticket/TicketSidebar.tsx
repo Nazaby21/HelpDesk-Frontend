@@ -29,8 +29,8 @@ export const TicketSidebar: React.FC = () => {
           <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
             Due Date
           </h4>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-200">
-            Aug 1, 2024 08:20 AM
+          <div className="text-sm font-medium text-gray-500 dark:text-gray-400 italic">
+            Pending Assignment
           </div>
         </div>
       </div>

@@ -2,28 +2,29 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { Pagination } from "@/components/ui/Pagination";
 import { Toast } from "@/components/ui/Toast";
 import { TicketTable } from "@/components/Tickets/TicketTable";
 import { Ticket, TicketPriority, TicketStatus } from "@/components/Tickets/TicketRow";
-import { useGetTicketsQuery } from "@/redux/feature/ticket/ticketApi";
+import { useGetTicketHistoryQuery, TicketResponse } from "@/redux/feature/ticket/ticketApi";
 
 export default function UserHistoryPage() {
   const router = useRouter();
   
-  const { data: ticketResponses = [], isLoading } = useGetTicketsQuery();
+  const { data: ticketResponses = [], isLoading } = useGetTicketHistoryQuery();
+
+  const statusMap: Record<string, TicketStatus> = {
+    PENDING: "Pending",
+    IN_PROGRESS: "In Progress",
+    COMPLETED: "Completed",
+  };
 
   const tickets: Ticket[] = useMemo(() => {
-    return ticketResponses.map((tr) => {
-      let status: TicketStatus = "Pending";
-      if (tr.logs && tr.logs.length > 0) {
-        const lastAction = tr.logs[tr.logs.length - 1].action;
-        if (lastAction === "RESOLVE" || lastAction === "CLOSED") status = "Completed";
-        else if (lastAction === "ASSIGN" || lastAction === "IN_PROGRESS" || lastAction === "UPDATE") status = "In Progress";
-      }
+    return ticketResponses.map((tr: TicketResponse) => {
+      const status: TicketStatus = statusMap[tr.status] ?? "Completed";
       return {
         id: `#TCK-${tr.id.toString().padStart(3, "0")}`,
+        rawId: tr.id.toString(),
         title: tr.ticketTitle,
         requester: { name: "Requester", email: "" },
         department: tr.categoryName || "General",
@@ -32,7 +33,7 @@ export default function UserHistoryPage() {
         assignedTo: tr.assignedName ? { name: tr.assignedName } : null,
         createdDate: new Date(tr.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
       };
-    }).filter(t => t.status === "Completed");
+    });
   }, [ticketResponses]);
 
   const [showToast, setShowToast] = useState(false);
@@ -40,7 +41,7 @@ export default function UserHistoryPage() {
 
   const handleActionClick = (action: string, ticket: Ticket) => {
     if (action === "view") {
-      router.push(`/tickets/${ticket.id.replace("#TCK-", "")}`);
+      router.push(`/tickets/${(ticket as any).rawId ?? ticket.id.replace("#TCK-", "")}`);
     } else {
       setShowToast(true);
     }

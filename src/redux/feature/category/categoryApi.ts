@@ -4,11 +4,14 @@ export interface Category {
   id: string | number;
   name: string;
   description?: string;
+  parentId?: number | null;
+  subCategories?: Category[];
 }
 
 export interface CreateCategoryDto {
   name: string;
   description?: string;
+  parentId?: number | null;
 }
 
 export const categoryApi = api.injectEndpoints({
@@ -25,7 +28,15 @@ export const categoryApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Category"],
     }),
+    updateCategory: builder.mutation<Category, { id: number | string; data: CreateCategoryDto }>({
+      query: ({ id, data }) => ({
+        url: `categories/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Category"],
+    }),
   }),
 });
 
-export const { useGetCategoriesQuery, useCreateCategoryMutation } = categoryApi;
+export const { useGetCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation } = categoryApi;

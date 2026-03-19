@@ -3,18 +3,23 @@
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getNavData } from "./data";
 import { ArrowLeftIcon, ChevronUp } from "./icons";
 import { MenuItem } from "./menu-item";
 import { useSidebarContext } from "./sidebar-context";
 import { useRole } from "@/app/role-context";
+import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
+import { Folder } from "lucide-react";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentCategory = searchParams.get("category");
   const { role } = useRole();
   const NAV_DATA = getNavData(role);
+  const { data: categories = [] } = useGetCategoriesQuery();
   const { setIsOpen, isOpen, isMobile, toggleSidebar } = useSidebarContext();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -171,6 +176,36 @@ export function Sidebar() {
                 </nav>
               </div>
             ))}
+            
+            {/* Dynamic User Categories */}
+            {role === "user" && (
+              <div className="mb-6">
+                <h2 className="mb-5 text-sm font-medium text-dark-4 dark:text-dark-6">
+                  CATEGORIES
+                </h2>
+                <nav role="navigation" aria-label="Categories">
+                  <ul className="space-y-2">
+                    {categories.map((cat) => {
+                      const href = `/incident-catalog?category=${encodeURIComponent(cat.name)}`;
+                      return (
+                        <li key={cat.id}>
+                          <MenuItem
+                            className="flex items-center gap-3 py-3"
+                            as="link"
+                            href={href}
+                            isActive={pathname === "/incident-catalog" && currentCategory === cat.name}
+                          >
+                            <Folder className="size-6 shrink-0" aria-hidden="true" />
+                            <span>{cat.name}</span>
+                          </MenuItem>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </div>
+            )}
+            
           </div>
         </div>
       </aside>

@@ -10,13 +10,15 @@ export interface UserResponse {
   role: string;
   departmentId: number;
   departmentName: string;
+  createdAt: string | null;
+  lastLoginAt: string | null;
 }
 
 export interface CreateUserDto {
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
+  phoneNumber?: string;
   password: string;
   role: string;
   departmentId?: string;
@@ -36,8 +38,14 @@ export const userApi = api.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+    deleteUser: builder.mutation<void, number | string>({
+      query: (id) => ({
+        url: `users/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
-export const { useGetUsersQuery, useCreateUserMutation } = userApi;
-
+export const { useGetUsersQuery, useCreateUserMutation, useDeleteUserMutation } = userApi;

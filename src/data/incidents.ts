@@ -6,7 +6,6 @@ export interface Incident {
 }
 
 export const INCIDENT_CATEGORIES = [
-  "IT Database Administration Issue",
   "IT Incident Management",
   "IT In-House System Issue",
   "IT MIS & Analytics Issue",
@@ -18,7 +17,6 @@ export const INCIDENT_CATEGORIES = [
 
 export const INCIDENT_TEMPLATES: Incident[] = [
   // 1. IT Database Administration Issue
-  { id: "db-1", title: "Database connection failed", category: "IT Database Administration Issue" },
   { id: "db-2", title: "Slow database performance", category: "IT Database Administration Issue" },
   { id: "db-3", title: "Data not saving to database", category: "IT Database Administration Issue" },
   { id: "db-4", title: "Database backup failed", category: "IT Database Administration Issue" },

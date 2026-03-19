@@ -8,12 +8,7 @@ import { AddUserForm } from "@/components/Users/AddUserForm";
 export default function AddUserPage() {
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = async (data: any) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 4000);
-  };
+  // AddUserForm handles the actual API submission internally if no onSubmit is provided.
 
   return (
       <div className="mx-auto w-full relative">
@@ -34,7 +29,7 @@ export default function AddUserPage() {
             </Link>
           </div>
 
-          <AddUserForm onSubmit={handleSubmit} onCancel={() => {}} />
+          <AddUserForm onCancel={() => {}} />
         </div>
 
         {showSuccess && (
