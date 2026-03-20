@@ -16,7 +16,7 @@ const nextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${apiUrl}/:path*`, // Proxy to production backend
+        destination: `${apiUrl}/api/v1/:path*`, // Proxy to production backend
       },
     ];
   },
