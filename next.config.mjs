@@ -12,11 +12,12 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL; // ✅ Use the public env var
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) return []; // Skip rewrite if env var is not set (e.g., during Docker build)
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${apiUrl}/api/v1/:path*`, // Proxy to production backend
+        destination: `${apiUrl}/api/v1/:path*`, // Proxy to backend
       },
     ];
   },
