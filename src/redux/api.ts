@@ -6,8 +6,8 @@ import type { RootState } from "./store";
 // Base query with correct URLs for SSR and client-side
 const baseQuery = fetchBaseQuery({
   baseUrl: typeof window === "undefined"
-    ? `${process.env.API_URL || "http://localhost:8080"}/api/v1` // SSR (server-side)
-    : `${process.env.NEXT_PUBLIC_API_URL}`, // Client-side production
+    ? `${process.env.API_URL || "http://localhost:8080"}/api/v1` // SSR: direct backend call
+    : `/api/v1`, // Client-side: use Next.js rewrite proxy (avoids build-time env var requirement)
   credentials: "include",
   prepareHeaders: (headers, { getState, endpoint }) => {
     headers.set("X-Requested-With", "XMLHttpRequest");
