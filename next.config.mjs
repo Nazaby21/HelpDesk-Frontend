@@ -11,17 +11,6 @@ const nextConfig = {
       { protocol: "https", hostname: "ui-avatars.com" },
     ],
   },
-  async rewrites() {
-    // Use API_URL (server-side) — no need for NEXT_PUBLIC_ prefix in next.config.mjs
-    // Falls back to localhost for local dev
-    const apiUrl = process.env.API_URL || "http://localhost:8080";
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: `${apiUrl}/api/v1/:path*`, // Proxy to backend
-      },
-    ];
-  },
 };
 
 export default nextConfig;
