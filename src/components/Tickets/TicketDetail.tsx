@@ -52,6 +52,7 @@ export default function TicketDetail() {
       created: ticketResponse.createdAt
         ? new Date(ticketResponse.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
         : "Unknown",
+      imageUrl: ticketResponse.imageUrl,
     };
   }, [ticketResponse]);
 
@@ -169,6 +170,18 @@ export default function TicketDetail() {
             <div className="prose prose-sm max-w-none text-gray-600">
               <p>{ticket.description}</p>
             </div>
+            {ticket.imageUrl && (
+              <div className="mt-6">
+                <h4 className="mb-2 text-sm font-semibold text-gray-900">Attachment</h4>
+                <a href={ticket.imageUrl} target="_blank" rel="noopener noreferrer" className="block w-max">
+                  <img 
+                    src={ticket.imageUrl} 
+                    alt="Ticket attachment" 
+                    className="max-w-xs max-h-64 object-contain rounded-lg border border-gray-200 shadow-sm hover:opacity-90 transition-opacity"
+                  />
+                </a>
+              </div>
+            )}
           </div>
           
           {/* Real-time Ticket Chat */}

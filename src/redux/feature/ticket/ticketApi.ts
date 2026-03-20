@@ -17,6 +17,7 @@ export interface TicketResponse {
   createdByName: string | null;
   createdAt: string;
   completedAt: string | null;
+  imageUrl?: string;
 }
 
 export interface ChatMessage {
@@ -85,8 +86,15 @@ export const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
+    uploadImage: builder.mutation<{ url: string }, FormData>({
+      query: (formData) => ({
+        url: "images/upload",
+        method: "POST",
+        body: formData,
+      }),
+    }),
   }),
 });
 
-export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useGetDashboardStatsQuery, useCreateTicketMutation, useUpdateTicketStatusMutation } = ticketApi;
+export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useGetDashboardStatsQuery, useCreateTicketMutation, useUpdateTicketStatusMutation, useUploadImageMutation } = ticketApi;
 

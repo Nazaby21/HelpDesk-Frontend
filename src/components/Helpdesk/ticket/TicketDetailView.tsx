@@ -7,7 +7,7 @@ import { TicketDescription } from "@/components/Helpdesk/ticket/TicketDescriptio
 import { FileUploadBox } from "@/components/Helpdesk/ticket/FileUploadBox";
 import { Toast } from "@/components/ui/Toast";
 import { useAppSelector } from "@/redux/hooks";
-import { useCreateTicketMutation } from "@/redux/feature/ticket/ticketApi";
+import { useCreateTicketMutation, useUploadImageMutation } from "@/redux/feature/ticket/ticketApi";
 import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
 
 interface TicketDetailViewProps {
@@ -22,9 +22,11 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
   const [toastMessage, setToastMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [priority, setPriority] = useState("MEDIUM");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { data: categories = [] } = useGetCategoriesQuery();
   const [createTicket, { isLoading: isSubmitting }] = useCreateTicketMutation();
+  const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
   // Find the subcategory using the 'id' passed from the route
   let selectedMainCategory = null;
@@ -58,6 +60,24 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
     }
 
     try {
+      let imageUrl: string | undefined = undefined;
+
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        
+        try {
+          const uploadRes = await uploadImage(formData).unwrap();
+          imageUrl = uploadRes.url;
+        } catch (uploadErr: any) {
+          console.error("Failed to upload image:", uploadErr);
+          setIsError(true);
+          setToastMessage("Failed to upload image. Please try again or remove the file.");
+          setShowToast(true);
+          return;
+        }
+      }
+
       const response = await createTicket({
         ticketTitle: incidentTitle,
         description,
@@ -65,6 +85,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
         subCategoryId: Number(selectedSubCategory.id),
         priority,
         status: "PENDING",
+        ...(imageUrl && { imageUrl }),
       }).unwrap();
 
       setIsError(false);
@@ -93,7 +114,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
           dueDate="Pending Review"
           assignedTeam={incidentCategory || "Support"}
           onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
+          isSubmitting={isSubmitting || isUploading}
         />
 
         <div className="mt-8 max-w-3xl space-y-6">
@@ -113,7 +134,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
           </div>
           
           <TicketDescription value={description} onChange={setDescription} />
-          <FileUploadBox />
+          <FileUploadBox file={selectedFile} onFileSelect={setSelectedFile} />
         </div>
       </div>
 
