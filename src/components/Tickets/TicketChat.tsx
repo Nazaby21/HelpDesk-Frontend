@@ -36,9 +36,11 @@ export function TicketChat({ ticketId }: TicketChatProps) {
   useEffect(() => {
     const client = new Client({
       webSocketFactory: () => {
-        // Derive backend base URL from NEXT_PUBLIC_API_URL (strip /api/v1 suffix)
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-        const backendUrl = apiUrl.replace(/\/api\/v1\/?$/, "");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        // Strip /api/v1 suffix if present, fallback to production backend URL
+        const backendUrl = apiUrl
+          ? apiUrl.replace(/\/api\/v1\/?$/, "")
+          : "https://helpdesk-backend-production-2244.up.railway.app";
         return new SockJS(`${backendUrl}/ws-chat`);
       },
       reconnectDelay: 5000,
