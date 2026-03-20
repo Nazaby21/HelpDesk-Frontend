@@ -35,7 +35,12 @@ export function TicketChat({ ticketId }: TicketChatProps) {
   // WebSocket connection
   useEffect(() => {
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws-chat"),
+      webSocketFactory: () => {
+        // Derive backend base URL from NEXT_PUBLIC_API_URL (strip /api/v1 suffix)
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+        const backendUrl = apiUrl.replace(/\/api\/v1\/?$/, "");
+        return new SockJS(`${backendUrl}/ws-chat`);
+      },
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe(`/topic/ticket/${ticketId}`, (msg) => {
