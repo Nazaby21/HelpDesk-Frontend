@@ -3,25 +3,44 @@ import { clearAuth } from "./feature/auth/authSlice";
 import { setToken, clearToken } from "./feature/auth/tokenSlice";
 import type { RootState } from "./store";
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: typeof window === "undefined" 
-    ? `${process.env.API_URL || "http://localhost:8080"}/api/v1/`  // SSR requests go directly to backend
-    : "/api/v1/", // Client requests use Next.js proxy to avoid CORS
-  credentials: "include", // Allow cookie propagation if backend requires it for refresh token
-  prepareHeaders: (headers, { getState, endpoint }) => {
-    // This strictly tells Spring Security this is an AJAX request, suppressing the browser's native HTTP Basic Auth popup on 401s!
-    headers.set("X-Requested-With", "XMLHttpRequest");
+// const baseQuery = fetchBaseQuery({
+//   baseUrl: typeof window === "undefined" 
+//     ? `${process.env.API_URL || "http://localhost:8080"}/api/v1/`  // SSR requests go directly to backend
+//     : "/api/v1/", // Client requests use Next.js proxy to avoid CORS
+//   credentials: "include", // Allow cookie propagation if backend requires it for refresh token
+//   prepareHeaders: (headers, { getState, endpoint }) => {
+//     // This strictly tells Spring Security this is an AJAX request, suppressing the browser's native HTTP Basic Auth popup on 401s!
+//     headers.set("X-Requested-With", "XMLHttpRequest");
     
-    // Prevent attaching a potentially expired token on login/refresh calls resulting in 401
-    if (endpoint === "login" || endpoint === "refreshToken") {
-      return headers;
-    }
+//     // Prevent attaching a potentially expired token on login/refresh calls resulting in 401
+//     if (endpoint === "login" || endpoint === "refreshToken") {
+//       return headers;
+//     }
+
+//     const token = (getState() as RootState).token.accessToken;
+//     console.log(`PREPARE HEADERS (${endpoint}) - Token from Redux: `, token ? `${token.substring(0, 15)}...` : "UNDEFINED/NULL");
+//     if (token) {
+//       headers.set("Authorization", `Bearer ${token}`);
+//     }
+//     return headers;
+//   },
+// });
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: typeof window === "undefined"
+    ? `${process.env.API_URL || "http://localhost:8080"}/api/v1/`
+    : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}`,
+  credentials: "include",
+  prepareHeaders: (headers, { getState, endpoint }) => {
+    headers.set("X-Requested-With", "XMLHttpRequest");
+
+    if (endpoint === "login" || endpoint === "refreshToken") return headers;
 
     const token = (getState() as RootState).token.accessToken;
-    console.log(`PREPARE HEADERS (${endpoint}) - Token from Redux: `, token ? `${token.substring(0, 15)}...` : "UNDEFINED/NULL");
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
+
     return headers;
   },
 });
