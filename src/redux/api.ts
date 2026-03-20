@@ -7,17 +7,14 @@ import type { RootState } from "./store";
 const baseQuery = fetchBaseQuery({
   baseUrl: typeof window === "undefined"
     ? `${process.env.API_URL || "http://localhost:8080"}/api/v1` // SSR (server-side)
-    : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}`, // Client-side production
-  credentials: "include", // allow cookies if needed for refresh token
+    : `${process.env.NEXT_PUBLIC_API_URL}`, // Client-side production
+  credentials: "include",
   prepareHeaders: (headers, { getState, endpoint }) => {
     headers.set("X-Requested-With", "XMLHttpRequest");
-
-    // Don't attach token on login/refresh
-    if (endpoint === "login" || endpoint === "refreshToken") return headers;
-
-    const token = (getState() as RootState).token.accessToken;
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-
+    if (endpoint !== "login" && endpoint !== "refreshToken") {
+      const token = (getState() as RootState).token.accessToken;
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+    }
     return headers;
   },
 });
