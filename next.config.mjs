@@ -12,13 +12,11 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const apiUrl =
-      process.env.NEXT_PUBLIC_API_URL || "https://helpdesk-backend-production-2244.up.railway.app";
-
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL; // ✅ Use the public env var
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${apiUrl}/:path*`, // Must always be defined
+        destination: `${apiUrl}/api/v1/:path*`, // Proxy to production backend
       },
     ];
   },
