@@ -22,7 +22,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
   const [toastMessage, setToastMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [priority, setPriority] = useState("MEDIUM");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { data: categories = [] } = useGetCategoriesQuery();
   const [createTicket, { isLoading: isSubmitting }] = useCreateTicketMutation();
@@ -60,19 +60,21 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
     }
 
     try {
-      let imageUrl: string | undefined = undefined;
+      let imageUrls: string[] | undefined = undefined;
 
-      if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-        
+      if (selectedFiles.length > 0) {
         try {
-          const uploadRes = await uploadImage(formData).unwrap();
-          imageUrl = uploadRes.url;
+          const uploadPromises = selectedFiles.map(async (file) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            const uploadRes = await uploadImage(formData).unwrap();
+            return uploadRes.url;
+          });
+          imageUrls = await Promise.all(uploadPromises);
         } catch (uploadErr: any) {
-          console.error("Failed to upload image:", uploadErr);
+          console.error("Failed to upload images:", uploadErr);
           setIsError(true);
-          setToastMessage("Failed to upload image. Please try again or remove the file.");
+          setToastMessage("Failed to upload images. Please try again or remove some files.");
           setShowToast(true);
           return;
         }
@@ -85,7 +87,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
         subCategoryId: Number(selectedSubCategory.id),
         priority,
         status: "PENDING",
-        ...(imageUrl && { imageUrl }),
+        ...(imageUrls && imageUrls.length > 0 && { imageUrls }),
       }).unwrap();
 
       setIsError(false);
@@ -134,7 +136,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
           </div>
           
           <TicketDescription value={description} onChange={setDescription} />
-          <FileUploadBox file={selectedFile} onFileSelect={setSelectedFile} />
+          <FileUploadBox files={selectedFiles} onFilesChange={setSelectedFiles} />
         </div>
       </div>
 
