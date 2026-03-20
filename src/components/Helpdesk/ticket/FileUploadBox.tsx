@@ -54,7 +54,15 @@ export const FileUploadBox: React.FC<FileUploadBoxProps> = ({ files, onFilesChan
             {files.map((selectedFile, index) => (
               <div key={index} className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-3 overflow-hidden">
-                  <UploadCloud className="h-5 w-5 flex-shrink-0 text-primary" />
+                  {selectedFile.type.startsWith('image/') ? (
+                    <img 
+                      src={URL.createObjectURL(selectedFile)} 
+                      alt="preview" 
+                      className="h-10 w-10 min-w-10 object-cover rounded-md flex-shrink-0 border border-gray-200 shadow-sm"
+                    />
+                  ) : (
+                    <UploadCloud className="h-5 w-5 flex-shrink-0 text-primary" />
+                  )}
                   <span className="text-sm font-medium truncate text-gray-700 dark:text-gray-300">
                     {selectedFile.name}
                   </span>

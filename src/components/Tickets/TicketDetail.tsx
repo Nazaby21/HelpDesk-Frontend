@@ -52,6 +52,7 @@ export default function TicketDetail() {
       created: ticketResponse.createdAt
         ? new Date(ticketResponse.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
         : "Unknown",
+      imageUrl: ticketResponse.imageUrl,
       imageUrls: ticketResponse.imageUrls || [],
     };
   }, [ticketResponse]);
@@ -170,6 +171,23 @@ export default function TicketDetail() {
             <div className="prose prose-sm max-w-none text-gray-600">
               <p>{ticket.description}</p>
             </div>
+            
+            {/* Legacy Fallback: Singular Image */}
+            {ticket.imageUrl && ticket.imageUrls.length === 0 && (
+              <div className="mt-8">
+                <h4 className="mb-4 text-sm font-semibold text-gray-900">Attachment</h4>
+                <a href={ticket.imageUrl} target="_blank" rel="noopener noreferrer" className="block relative group w-max">
+                  <img 
+                    src={ticket.imageUrl} 
+                    alt="Ticket attachment" 
+                    className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-xl border border-gray-200 shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-xl" />
+                </a>
+              </div>
+            )}
+
+            {/* New Multi-Image Support */}
             {ticket.imageUrls.length > 0 && (
               <div className="mt-8">
                 <h4 className="mb-4 text-sm font-semibold text-gray-900 flex items-center gap-2">

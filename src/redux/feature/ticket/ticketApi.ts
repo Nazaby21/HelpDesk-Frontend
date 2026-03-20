@@ -17,6 +17,7 @@ export interface TicketResponse {
   createdByName: string | null;
   createdAt: string;
   completedAt: string | null;
+  imageUrl?: string;
   imageUrls?: string[];
 }
 
