@@ -3,44 +3,20 @@ const nextConfig = {
   images: {
     qualities: [75, 100],
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "cdn.sanity.io",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "avatars.githubusercontent.com",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "pub-b7fd9c30cdbf439183b75041f5f71b92.r2.dev",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "i.pravatar.cc",
-        port: ""
-      },
-      {
-        protocol: "https",
-        hostname: "ui-avatars.com",
-        port: ""
-      }
-    ]
+      { protocol: "https", hostname: "cdn.sanity.io" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+      { protocol: "https", hostname: "pub-b7fd9c30cdbf439183b75041f5f71b92.r2.dev" },
+      { protocol: "https", hostname: "i.pravatar.cc" },
+      { protocol: "https", hostname: "ui-avatars.com" },
+    ],
   },
   async rewrites() {
-    const apiUrl = process.env.API_URL || "http://localhost:8080";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL; // ✅ Use the public env var
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${apiUrl}/api/v1/:path*`, // Proxy to Spring Boot Backend
+        destination: `${apiUrl}/:path*`, // Proxy to production backend
       },
     ];
   },
