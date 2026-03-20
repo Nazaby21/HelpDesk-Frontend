@@ -7,6 +7,7 @@ export interface User {
   lastName: string;
   departmentId: string | number;
   role: string;
+  imageUrl?: string;
 }
 
 export interface AuthState {

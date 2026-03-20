@@ -5,11 +5,15 @@ import Image from "next/image";
 import { useState } from "react";
 import { CameraIcon } from "@/components/Profile/icons";
 import { SocialAccounts } from "@/components/Profile/social-accounts";
+import { useAppSelector } from "@/redux/hooks";
+import { selectCurrentUser } from "@/redux/feature/auth/authSlice";
 
 export function ProfileView() {
+  const currentUser = useAppSelector(selectCurrentUser);
+
   const [data, setData] = useState({
-    name: "Danish Heilium",
-    profilePhoto: "/images/user/user-03.png",
+    name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "User Profile",
+    profilePhoto: currentUser?.imageUrl || "/images/user/user-03.png",
     coverPhoto: "/images/cover/cover-01.png",
   });
 

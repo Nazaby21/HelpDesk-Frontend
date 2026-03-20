@@ -46,6 +46,7 @@ export const authApi = api.injectEndpoints({
             lastName: response.lastName,
             departmentId: response.departmentId,
             role: response.role,
+            imageUrl: response.imageUrl,
           },
         };
       },

@@ -27,7 +27,7 @@ export function UserInfo() {
   const USER = {
     name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "API User",
     email: currentUser?.email || "user@example.com",
-    img: "/images/user/user-03.png",
+    img: currentUser?.imageUrl || "/images/user/user-03.png",
   };
 
   return (
