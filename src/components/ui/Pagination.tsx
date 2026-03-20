@@ -26,7 +26,7 @@ export function Pagination({
     <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-6 mt-6 ${className}`}>
       {totalResults !== undefined && resultsPerPage !== undefined ? (
         <span className="text-sm text-gray-500">
-          Showing <span className="font-medium text-gray-900">{(currentPage - 1) * resultsPerPage + 1}</span> to{" "}
+          Showing <span className="font-medium text-gray-900">{totalResults === 0 ? 0 : (currentPage - 1) * resultsPerPage + 1}</span> to{" "}
           <span className="font-medium text-gray-900">
             {Math.min(currentPage * resultsPerPage, totalResults)}
           </span>{" "}

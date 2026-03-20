@@ -1,48 +1,50 @@
-import { compactFormat } from "@/lib/format-number";
-import { getOverviewData } from "@/app/(Dashboard)/fetch";
-import { OverviewCard } from "./card";
-import * as icons from "./icons";
+"use client";
 
-export async function OverviewCardsGroup() {
-  const { tickets, pendingTickets, completedTickets, users } = await getOverviewData();
+import React from "react";
+import { compactFormat } from "@/lib/format-number";
+import { OverviewCard } from "./card";
+import { OverviewCardsSkeleton } from "./skeleton";
+import * as icons from "./icons";
+import { useGetDashboardStatsQuery } from "@/redux/feature/ticket/ticketApi";
+import { useRole } from "@/app/role-context";
+
+export function OverviewCardsGroup() {
+  const { data: stats, isLoading } = useGetDashboardStatsQuery();
+  const { role } = useRole();
+
+  if (isLoading || !stats) {
+    return <OverviewCardsSkeleton />;
+  }
+
+  const showUsers = role !== "technician";
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+    <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 ${showUsers ? "xl:grid-cols-4" : "xl:grid-cols-3"} 2xl:gap-7.5`}>
       <OverviewCard
-        label="Total Ticket"
-        data={{
-          ...tickets,
-          value: compactFormat(tickets.value),
-        }}
+        label="Total Tickets"
+        data={{ value: compactFormat(stats.totalTickets) }}
         Icon={icons.Views}
       />
 
       <OverviewCard
-        label="Total Pending Ticket"
-        data={{
-          ...pendingTickets,
-          value: compactFormat(pendingTickets.value),
-        }}
+        label="Pending Tickets"
+        data={{ value: compactFormat(stats.pendingTickets) }}
         Icon={icons.Profit}
       />
 
       <OverviewCard
-        label="Total Completed Ticket"
-        data={{
-          ...completedTickets,
-          value: compactFormat(completedTickets.value),
-        }}
+        label="Completed Tickets"
+        data={{ value: compactFormat(stats.completedTickets) }}
         Icon={icons.Product}
       />
 
-      <OverviewCard
-        label="Total Users"
-        data={{
-          ...users,
-          value: compactFormat(users.value),
-        }}
-        Icon={icons.Users}
-      />
+      {showUsers && (
+        <OverviewCard
+          label="Total Users"
+          data={{ value: compactFormat(stats.totalUsers) }}
+          Icon={icons.Users}
+        />
+      )}
     </div>
   );
 }

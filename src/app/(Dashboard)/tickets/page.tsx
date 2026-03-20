@@ -54,6 +54,7 @@ export default function AllTicketsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const itemsPerPage = 7;
 
   const tickets: Ticket[] = React.useMemo(() => {
     if (!apiTickets) return [];
@@ -63,7 +64,7 @@ export default function AllTicketsPage() {
       id: `#TCK-${t.id}`,
       rawId: t.id.toString(),
       title: t.ticketTitle || "Untitled",
-      requester: { name: t.createdBy ? `User #${t.createdBy}` : "Unknown", email: "" },
+      requester: { name: t.createdByName || "Unknown", email: "" },
       department: t.categoryName || "General",
       priority: formatPriority(t.priority),
       status: formatStatus(t.status ?? "PENDING"),
@@ -89,6 +90,11 @@ export default function AllTicketsPage() {
 
     return mapped;
   }, [apiTickets, statusFilter, searchQuery]);
+
+  // Pagination slicing
+  const totalPages = Math.ceil(tickets.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTickets = tickets.slice(startIndex, startIndex + itemsPerPage);
 
   const handleActionClick = (action: string, ticket: Ticket) => {
     const rawId = (ticket as any).rawId;
@@ -127,20 +133,20 @@ export default function AllTicketsPage() {
     <div className="mx-auto w-full">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <TicketTable
-          tickets={tickets}
+          tickets={currentTickets}
           hideAssignedTo={role === "user"}
           onActionClick={handleActionClick}
           onCreateClick={() => router.push("/incident-catalog")}
-          onSearchChange={setSearchQuery}
-          onStatusFilterChange={setStatusFilter}
+          onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
+          onStatusFilterChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
         />
 
         <Pagination
           currentPage={currentPage}
-          totalPages={Math.ceil(tickets.length / 10) || 1}
+          totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalResults={tickets.length}
-          resultsPerPage={10}
+          resultsPerPage={itemsPerPage}
         />
       </div>
 

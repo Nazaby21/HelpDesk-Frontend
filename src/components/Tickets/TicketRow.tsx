@@ -16,6 +16,7 @@ export interface Ticket {
   status: TicketStatus;
   assignedTo: { name: string } | null;
   createdDate: string;
+  completedDate?: string;
 }
 
 interface TicketRowProps {
@@ -24,6 +25,7 @@ interface TicketRowProps {
   onMenuToggle: (id: string | null) => void;
   onActionClick: (action: string, ticket: Ticket) => void;
   hideAssignedTo?: boolean;
+  showCompletedDate?: boolean;
 }
 
 export function TicketRow({
@@ -32,6 +34,7 @@ export function TicketRow({
   onMenuToggle,
   onActionClick,
   hideAssignedTo = false,
+  showCompletedDate = false,
 }: TicketRowProps) {
   const { role } = useRole();
   const isMenuOpen = activeMenuId === ticket.id;
@@ -46,12 +49,13 @@ export function TicketRow({
   };
 
   const PriorityBadge = ({ priority }: { priority: TicketPriority }) => {
+    const normalized = priority?.charAt(0).toUpperCase() + priority?.slice(1).toLowerCase() as TicketPriority;
     const variants: Record<TicketPriority, any> = {
-      Low: "default",
-      Medium: "info",
-      High: "warning",
+      Low: "warning",
+      Medium: "orange",
+      High: "error",
     };
-    return <Badge variant={variants[priority]}>{priority}</Badge>;
+    return <Badge variant={variants[normalized] ?? "default"}>{normalized}</Badge>;
   };
 
   return (
@@ -98,6 +102,11 @@ export function TicketRow({
       <TableCell className="whitespace-nowrap text-gray-500">
         {ticket.createdDate}
       </TableCell>
+      {showCompletedDate && (
+        <TableCell className="whitespace-nowrap text-gray-500">
+          {ticket.completedDate || "—"}
+        </TableCell>
+      )}
       <TableCell className="relative text-right">
         <button
           onClick={(e) => {

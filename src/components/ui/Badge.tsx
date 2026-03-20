@@ -9,6 +9,7 @@ interface BadgeProps {
     | "error"
     | "info"
     | "purple"
+    | "orange"
     | "outline";
   className?: string;
 }
@@ -23,6 +24,7 @@ export function Badge({ children, variant = "default", className = "" }: BadgePr
     error: "bg-red-100 text-red-700 border border-red-200",
     info: "bg-blue-100 text-blue-700",
     purple: "bg-purple-100 text-purple-700",
+    orange: "bg-orange-100 text-orange-700",
     outline: "border border-gray-200 text-gray-700",
   };
 

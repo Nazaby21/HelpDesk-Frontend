@@ -29,6 +29,7 @@ export default function UserTicketsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const itemsPerPage = 7;
 
   const tickets: Ticket[] = useMemo(() => {
     let mapped = ticketResponses.map((tr) => {
@@ -37,7 +38,7 @@ export default function UserTicketsPage() {
         id: `#TCK-${tr.id.toString().padStart(3, "0")}`,
         rawId: tr.id.toString(),
         title: tr.ticketTitle,
-        requester: { name: "Requester", email: "" },
+        requester: { name: tr.createdByName || "Unknown", email: "" },
         department: tr.categoryName || "General",
         priority: (tr.priority as TicketPriority) || "Medium",
         status,
@@ -65,6 +66,11 @@ export default function UserTicketsPage() {
     return mapped;
   }, [ticketResponses, statusFilter, searchQuery]);
 
+  // Pagination slicing
+  const totalPages = Math.ceil(tickets.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTickets = tickets.slice(startIndex, startIndex + itemsPerPage);
+
   const handleActionClick = (action: string, ticket: Ticket) => {
     if (action === "view") {
       router.push(`/tickets/${(ticket as any).rawId ?? ticket.id.replace("#TCK-", "")}`);
@@ -83,20 +89,20 @@ export default function UserTicketsPage() {
       <div className="space-y-10">
         <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
           <TicketTable
-            tickets={tickets}
+            tickets={currentTickets}
             hideAssignedTo={true}
             onActionClick={handleActionClick}
             onCreateClick={() => router.push("/incident-catalog")}
-            onSearchChange={setSearchQuery}
-            onStatusFilterChange={setStatusFilter}
+            onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
+            onStatusFilterChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
           />
 
           <Pagination
             currentPage={currentPage}
-            totalPages={1}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
-            totalResults={2}
-            resultsPerPage={10}
+            totalResults={tickets.length}
+            resultsPerPage={itemsPerPage}
           />
         </div>
 

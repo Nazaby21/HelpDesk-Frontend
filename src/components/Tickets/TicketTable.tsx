@@ -13,6 +13,7 @@ interface TicketTableProps {
   onStatusFilterChange?: (status: string) => void;
   onSearchChange?: (value: string) => void;
   hideAssignedTo?: boolean;
+  showCompletedDate?: boolean;
 }
 
 export function TicketTable({
@@ -22,6 +23,7 @@ export function TicketTable({
   onStatusFilterChange,
   onSearchChange,
   hideAssignedTo = false,
+  showCompletedDate = false,
 }: TicketTableProps) {
   const { role } = useRole();
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -88,6 +90,7 @@ export function TicketTable({
             <TableHead>Status</TableHead>
             {!hideAssignedTo && <TableHead>Assigned To</TableHead>}
             <TableHead className="whitespace-nowrap">Created Date</TableHead>
+            {showCompletedDate && <TableHead className="whitespace-nowrap">Completed Date</TableHead>}
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -100,6 +103,7 @@ export function TicketTable({
               onMenuToggle={setActiveMenuId}
               onActionClick={onActionClick}
               hideAssignedTo={hideAssignedTo}
+              showCompletedDate={showCompletedDate}
             />
           ))}
         </TableBody>

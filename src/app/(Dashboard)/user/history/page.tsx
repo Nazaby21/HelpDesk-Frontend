@@ -19,25 +19,52 @@ export default function UserHistoryPage() {
     COMPLETED: "Completed",
   };
 
+  const [showToast, setShowToast] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const itemsPerPage = 7;
+
   const tickets: Ticket[] = useMemo(() => {
-    return ticketResponses.map((tr: TicketResponse) => {
+    let mapped = ticketResponses.map((tr: TicketResponse) => {
       const status: TicketStatus = statusMap[tr.status] ?? "Completed";
       return {
         id: `#TCK-${tr.id.toString().padStart(3, "0")}`,
         rawId: tr.id.toString(),
         title: tr.ticketTitle,
-        requester: { name: "Requester", email: "" },
+        requester: { name: tr.createdByName || "Unknown", email: "" },
         department: tr.categoryName || "General",
         priority: (tr.priority as TicketPriority) || "Medium",
         status,
         assignedTo: tr.assignedName ? { name: tr.assignedName } : null,
         createdDate: new Date(tr.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
+        completedDate: tr.completedAt ? new Date(tr.completedAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : undefined,
       };
     });
-  }, [ticketResponses]);
 
-  const [showToast, setShowToast] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+    // Filter by status
+    if (statusFilter !== "ALL") {
+      mapped = mapped.filter((t) => t.status.toUpperCase().replace(" ", "_") === statusFilter);
+    }
+
+    // Filter by search
+    if (searchQuery.trim()) {
+      const lowerQ = searchQuery.toLowerCase();
+      mapped = mapped.filter(
+        (t) =>
+          t.id.toLowerCase().includes(lowerQ) ||
+          t.title.toLowerCase().includes(lowerQ) ||
+          t.department.toLowerCase().includes(lowerQ)
+      );
+    }
+
+    return mapped;
+  }, [ticketResponses, statusFilter, searchQuery]);
+
+  // Pagination slicing
+  const totalPages = Math.ceil(tickets.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTickets = tickets.slice(startIndex, startIndex + itemsPerPage);
 
   const handleActionClick = (action: string, ticket: Ticket) => {
     if (action === "view") {
@@ -54,19 +81,20 @@ export default function UserHistoryPage() {
       <div className="space-y-10">
         <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
           <TicketTable
-            tickets={tickets}
+            tickets={currentTickets}
             onActionClick={handleActionClick}
             onCreateClick={() => router.push("/incident-catalog")}
-            onStatusFilterChange={(status) => console.log("Filter", status)}
-            onSearchChange={(val) => console.log("Search", val)}
+            onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
+            onStatusFilterChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
+            showCompletedDate={true}
           />
 
           <Pagination
             currentPage={currentPage}
-            totalPages={1}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
-            totalResults={2}
-            resultsPerPage={10}
+            totalResults={tickets.length}
+            resultsPerPage={itemsPerPage}
           />
         </div>
 

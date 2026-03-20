@@ -14,7 +14,9 @@ export interface TicketResponse {
   assignedName: string | null;
   logs: any[];
   createdBy: number;
+  createdByName: string | null;
   createdAt: string;
+  completedAt: string | null;
 }
 
 export interface ChatMessage {
@@ -24,6 +26,14 @@ export interface ChatMessage {
   sender: string;
   content: string;
   timestamp: string;
+}
+
+export interface DashboardStats {
+  totalTickets: number;
+  pendingTickets: number;
+  inProgressTickets: number;
+  completedTickets: number;
+  totalUsers: number;
 }
 
 export const ticketApi = api.injectEndpoints({
@@ -55,6 +65,10 @@ export const ticketApi = api.injectEndpoints({
       },
       providesTags: ["Ticket"],
     }),
+    getDashboardStats: builder.query<DashboardStats, void>({
+      query: () => "tickets/stats",
+      providesTags: ["Ticket"],
+    }),
     createTicket: builder.mutation<TicketResponse, Partial<TicketResponse>>({
       query: (body) => ({
         url: "tickets",
@@ -74,4 +88,5 @@ export const ticketApi = api.injectEndpoints({
   }),
 });
 
-export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useCreateTicketMutation, useUpdateTicketStatusMutation } = ticketApi;
+export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useGetDashboardStatsQuery, useCreateTicketMutation, useUpdateTicketStatusMutation } = ticketApi;
+

@@ -18,6 +18,8 @@ export default function UsersPage() {
   const { data: userResponses = [], isLoading, refetch } = useGetUsersQuery();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 
+  const itemsPerPage = 10;
+
   const users: User[] = useMemo(() => {
     // 1. Map API data to our User format
     const mapped = userResponses.map((ur) => ({
@@ -25,7 +27,7 @@ export default function UsersPage() {
       name: `${ur.firstName} ${ur.lastName}`,
       email: ur.email,
       role: ur.role,
-      lastActive: ur.lastLoginAt || null, 
+      lastActive: ur.updatedAt || null,
       createdAt: ur.createdAt || null,
       avatar: ur.imageUrl || null,
     }));
@@ -41,6 +43,13 @@ export default function UsersPage() {
         u.role.toLowerCase().includes(lowerQuery)
     );
   }, [userResponses, searchQuery]);
+
+  // 3. Paginate — only show the current page's slice
+  const totalPages = Math.ceil(users.length / itemsPerPage) || 1;
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleDelete = async (user: User) => {
     if (!window.confirm(`Are you sure you want to delete ${user.name}?`)) return;
@@ -64,18 +73,18 @@ export default function UsersPage() {
     <div className="mx-auto w-full">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <UserTable
-          users={users}
-          onSearchChange={setSearchQuery}
+          users={paginatedUsers}
+          onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
 
         <Pagination
           currentPage={currentPage}
-          totalPages={Math.ceil(users.length / 10) || 1}
+          totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalResults={users.length}
-          resultsPerPage={10}
+          resultsPerPage={itemsPerPage}
         />
       </div>
 

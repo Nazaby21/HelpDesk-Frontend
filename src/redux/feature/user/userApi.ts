@@ -11,7 +11,7 @@ export interface UserResponse {
   departmentId: number;
   departmentName: string;
   createdAt: string | null;
-  lastLoginAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface CreateUserDto {
