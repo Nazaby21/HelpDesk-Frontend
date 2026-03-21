@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { X } from "lucide-react";
+import Link from "next/link";
 import { EditUserForm } from "@/components/Users/EditUserForm";
 import { useGetUserByIdQuery } from "@/redux/feature/user/userApi";
 
@@ -17,26 +17,22 @@ export default function EditUserPage() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl w-full">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Edit User</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Update user information and role.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          leftIcon={<ArrowLeft className="h-4 w-4" />}
-          onClick={() => router.push("/users")}
-        >
-          Back to Users
-        </Button>
-      </div>
-
+    <div className="mx-auto w-full relative">
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-          <h2 className="font-medium text-gray-900">User Profile</h2>
+        {/* Header Section */}
+        <div className="flex items-start justify-between border-b border-gray-200 bg-white px-6 py-5">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Edit User</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Update user information and role.
+            </p>
+          </div>
+          <Link
+            href="/users"
+            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </Link>
         </div>
         
         {isLoading ? (
