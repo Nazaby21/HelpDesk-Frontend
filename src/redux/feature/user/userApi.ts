@@ -45,7 +45,25 @@ export const userApi = api.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+    getUserById: builder.query<UserResponse, number | string>({
+      query: (id) => `users/${id}`,
+      providesTags: (result, error, id) => [{ type: "User", id }],
+    }),
+    updateUser: builder.mutation<UserResponse, { id: number | string; data: Partial<CreateUserDto> }>({
+      query: ({ id, data }) => ({
+        url: `users/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
-export const { useGetUsersQuery, useCreateUserMutation, useDeleteUserMutation } = userApi;
+export const { 
+  useGetUsersQuery, 
+  useCreateUserMutation, 
+  useDeleteUserMutation,
+  useGetUserByIdQuery,
+  useUpdateUserMutation
+} = userApi;
