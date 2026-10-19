@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow } from "@/components/ui/table";
 import { UserRow, User } from "./UserRow";
 
+import { PageHeader } from "@/components/ui/PageHeader";
+
 interface UserTableProps {
   users: User[];
   onAddClick?: () => void;
@@ -23,39 +25,30 @@ export function UserTable({
 }: UserTableProps) {
   return (
     <>
-      <div className="mb-6 pb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-100 dark:border-gray-800">
-        {/* Left Section */}
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900">User Management</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your team members and their account permissions here.
-          </p>
-        </div>
-
-        {/* Right Section */}
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-          {/* Search */}
-          <div className="w-full sm:w-64">
-            <Input
-              placeholder="Search users..."
-              leftIcon={<Search className="h-4 w-4 text-gray-400" />}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="w-full border-gray-300"
-            />
-          </div>
-
-          {/* Add User Button */}
-          <Link href="/users/add">
+      <PageHeader
+        title="User Management"
+        subtitle="Manage your team members and their account permissions here."
+        action={
+          <Link href="/users/add" className="w-full sm:w-auto">
             <Button
               leftIcon={<Plus className="h-4 w-4" />}
-              className="w-full sm:w-auto"
+              className="w-full"
               onClick={onAddClick}
             >
               Add User
             </Button>
           </Link>
+        }
+      >
+        <div className="w-full sm:w-64">
+          <Input
+            placeholder="Search users..."
+            leftIcon={<Search className="h-4 w-4 text-gray-400" />}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            className="w-full border-gray-300"
+          />
         </div>
-      </div>
+      </PageHeader>
 
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">

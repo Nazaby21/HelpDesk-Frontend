@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import { Plus, ListTree, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   useGetCategoriesQuery,
   useDeleteCategoryMutation,
   Category,
 } from "@/redux/feature/category/categoryApi";
 import { CreateCategoryModal } from "./CreateCategoryModal";
+import { Toast } from "@/components/ui/Toast";
 import { UserRole } from "@/app/role-context";
 
 interface DeleteTarget {
@@ -19,13 +21,14 @@ interface DeleteTarget {
 }
 
 export function CategoryManager({ role }: { role: UserRole }) {
-  const { data: categories = [], isLoading } = useGetCategoriesQuery();
+  const { data: categories = [], isLoading, isError, error, refetch } = useGetCategoriesQuery();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
-
-  if (isLoading) return <div className="p-8">Loading categories...</div>;
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error" | "info">("success");
 
   const mainCategories = categories;
 
@@ -49,22 +52,44 @@ export function CategoryManager({ role }: { role: UserRole }) {
     try {
       await deleteCategory(deleteTarget.id).unwrap();
       setDeleteTarget(null);
-    } catch (err) {
-      console.error("Failed to delete category", err);
+      setToastType("success");
+      setToastMessage("Category deleted successfully");
+      setShowToast(true);
+    } catch (err: any) {
+      setToastType("error");
+      setToastMessage(err?.data?.message || "Failed to delete category");
+      setShowToast(true);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button onClick={handleCreateMain} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Create Main Category
-        </Button>
-      </div>
+      <PageHeader
+        title="Category Management"
+        subtitle="Manage main categories and their sub-issues."
+        action={
+          <Button onClick={handleCreateMain} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create Main Category
+          </Button>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mainCategories.length === 0 ? (
+        {isLoading ? (
+          <div className="col-span-full flex flex-col items-center justify-center p-12 text-gray-500">
+            <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
+            <p>Loading categories...</p>
+          </div>
+        ) : isError ? (
+          <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 bg-red-50 p-8 text-center text-red-600 dark:border-red-900/50 dark:bg-red-900/10">
+            <AlertTriangle className="mb-2 h-8 w-8" />
+            <p className="mb-4">Failed to load categories.</p>
+            <Button onClick={() => refetch()} variant="outline" className="border-red-200 hover:bg-red-100 hover:text-red-700">
+              Retry
+            </Button>
+          </div>
+        ) : mainCategories.length === 0 ? (
           <div className="col-span-full rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
             No categories found. Create one to get started.
           </div>
@@ -75,7 +100,7 @@ export function CategoryManager({ role }: { role: UserRole }) {
             return (
               <div
                 key={main.id}
-                className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                className="flex flex-col h-full rounded-xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
               >
                 <div className="mb-4 flex items-start justify-between">
                   <div>
@@ -83,21 +108,25 @@ export function CategoryManager({ role }: { role: UserRole }) {
                       {main.name}
                     </h3>
                     {main.description && (
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p 
+                        className="mt-1 text-sm text-gray-500 line-clamp-2"
+                        title={main.description}
+                      >
                         {main.description}
                       </p>
                     )}
                   </div>
                   <button
                     onClick={() => handleDeleteClick(main.id, main.name, false)}
-                    className="ml-2 shrink-0 rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                    className="ml-2 shrink-0 rounded-md p-2 min-h-[32px] min-w-[32px] flex items-center justify-center text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                     title="Delete category"
+                    aria-label={`Delete category ${main.name}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
 
-                <div className="mt-4 space-y-3">
+                <div className="mt-auto space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800/50">
                   <div className="flex items-center justify-between text-sm font-medium text-gray-700 dark:text-gray-300">
                     <span className="flex items-center gap-2">
                       <ListTree className="h-4 w-4 text-blue-500" />
@@ -124,10 +153,11 @@ export function CategoryManager({ role }: { role: UserRole }) {
                         </span>
                         <button
                           onClick={() => handleDeleteClick(sub.id, sub.name, true)}
-                          className="shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                          className="shrink-0 rounded-md p-2 min-h-[32px] min-w-[32px] flex items-center justify-center text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                           title="Delete sub-issue"
+                          aria-label={`Delete sub-issue ${sub.name}`}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </li>
                     ))}
@@ -216,6 +246,13 @@ export function CategoryManager({ role }: { role: UserRole }) {
           </div>
         </div>
       </Modal>
+
+      <Toast 
+        isOpen={showToast} 
+        onClose={() => setShowToast(false)} 
+        message={toastMessage} 
+        type={toastType} 
+      />
     </div>
   );
 }

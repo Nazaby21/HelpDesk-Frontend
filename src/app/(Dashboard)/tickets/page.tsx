@@ -8,6 +8,7 @@ import { TicketTable } from "@/components/Tickets/TicketTable";
 import { Ticket } from "@/components/Tickets/TicketRow";
 import { useRole } from "@/app/role-context";
 import { useGetTicketsQuery, useUpdateTicketStatusMutation } from "@/redux/feature/ticket/ticketApi";
+import { formatDate } from "@/utils/date";
 
 function formatPriority(p: string): "Low" | "Medium" | "High" {
   const map: Record<string, "Low" | "Medium" | "High"> = {
@@ -34,13 +35,6 @@ function formatStatus(s: string): "Pending" | "In Progress" | "Completed" {
     Completed: "Completed",
   };
   return map[s] ?? "Pending";
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function AllTicketsPage() {
@@ -107,7 +101,10 @@ export default function AllTicketsPage() {
           setToastMessage("Ticket accepted successfully");
           setShowToast(true);
         })
-        .catch((err) => console.error("Failed to accept ticket", err));
+        .catch((err) => {
+          setToastMessage(err?.data?.message || "Failed to accept ticket");
+          setShowToast(true);
+        });
     } else if (action === "close") {
       updateTicketStatus({ id: rawId, status: "COMPLETED", remark: "Closed by technician" })
         .unwrap()
@@ -115,7 +112,10 @@ export default function AllTicketsPage() {
           setToastMessage("Ticket closed successfully");
           setShowToast(true);
         })
-        .catch((err) => console.error("Failed to close ticket", err));
+        .catch((err) => {
+          setToastMessage(err?.data?.message || "Failed to close ticket");
+          setShowToast(true);
+        });
     }
   };
 

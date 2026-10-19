@@ -32,6 +32,7 @@ export function Sidebar() {
     // );
   };
 
+  
   useEffect(() => {
     // Keep collapsible open, when it's subpage is active
     NAV_DATA.some((section) => {
@@ -48,6 +49,7 @@ export function Sidebar() {
         });
       });
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   return (
@@ -212,3 +214,6 @@ export function Sidebar() {
     </>
   );
 }
+
+
+

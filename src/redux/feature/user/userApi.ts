@@ -12,6 +12,10 @@ export interface UserResponse {
   departmentName: string;
   createdAt: string | null;
   updatedAt: string | null;
+  ticketsCreated?: number;
+  ticketsAssigned?: number;
+  ticketsResolved?: number;
+  ticketsOpen?: number;
 }
 
 export interface CreateUserDto {

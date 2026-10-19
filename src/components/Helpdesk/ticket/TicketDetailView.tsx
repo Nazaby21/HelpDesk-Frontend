@@ -9,6 +9,7 @@ import { Toast } from "@/components/ui/Toast";
 import { useAppSelector } from "@/redux/hooks";
 import { useCreateTicketMutation, useUploadImageMutation } from "@/redux/feature/ticket/ticketApi";
 import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
+import { formatDateTime } from "@/utils/date";
 
 interface TicketDetailViewProps {
   id: string;
@@ -112,7 +113,7 @@ export function TicketDetailView({ id }: TicketDetailViewProps) {
           id=""
           title={`Request ${incidentCategory.replace("Issue", "")} for ${incidentTitle}`}
           creatorName={user ? `${user.firstName} ${user.lastName}` : "Current User"}
-          createdDate={new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          createdDate={formatDateTime(new Date())}
           dueDate="Pending Review"
           assignedTeam={incidentCategory || "Support"}
           onSubmit={handleSubmit}

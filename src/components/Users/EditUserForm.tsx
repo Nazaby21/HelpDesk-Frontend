@@ -11,6 +11,8 @@ import { Department } from "@/redux/feature/department/departmentApi";
 import { useUpdateUserMutation, UserResponse } from "@/redux/feature/user/userApi";
 import { useRouter } from "next/navigation";
 
+import { Toast } from "@/components/ui/Toast";
+
 interface EditUserFormProps {
   user: UserResponse;
   onCancel: () => void;
@@ -22,6 +24,8 @@ export function EditUserForm({ user, onCancel }: EditUserFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeptModal, setShowDeptModal] = useState(false);
   const [selectedDeptId, setSelectedDeptId] = useState(String(user.departmentId) || "");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Form field state
   const firstNameRef = useRef<HTMLInputElement>(null);
@@ -64,9 +68,9 @@ export function EditUserForm({ user, onCancel }: EditUserFormProps) {
     try {
       await updateUser({ id: user.id, data: formData }).unwrap();
       router.push("/users");
-    } catch (err) {
-      console.error("Failed to update user:", err);
-      alert("Failed to update user");
+    } catch (err: any) {
+      setToastMessage(err?.data?.message || "Failed to update user");
+      setShowToast(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -212,6 +216,12 @@ export function EditUserForm({ user, onCancel }: EditUserFormProps) {
         isOpen={showDeptModal}
         onClose={() => setShowDeptModal(false)}
         onCreated={handleDepartmentCreated}
+      />
+      <Toast
+        isOpen={showToast}
+        onClose={() => setShowToast(false)}
+        message={toastMessage}
+        type="error"
       />
     </>
   );

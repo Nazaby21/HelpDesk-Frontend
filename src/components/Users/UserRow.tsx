@@ -1,7 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { TableRow, TableCell } from "@/components/ui/table";
+import { ActionMenu } from "@/components/ui/ActionMenu";
+import { formatDate, useRelativeTime } from "@/utils/date";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
 
 export interface User {
   id: string | number;
@@ -17,30 +20,6 @@ interface UserRowProps {
   user: User;
   onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
-}
-
-/** Format an ISO date string as a relative time like "3 hours ago" */
-function useRelativeTime(isoDate: string | null): string {
-  const [label, setLabel] = useState("—");
-
-  useEffect(() => {
-    if (!isoDate) { setLabel("—"); return; }
-
-    const format = () => {
-      const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 1000);
-      if (diff < 60) return "Just now";
-      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-      if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
-      return new Date(isoDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    };
-
-    setLabel(format());
-    const interval = setInterval(() => setLabel(format()), 60_000);
-    return () => clearInterval(interval);
-  }, [isoDate]);
-
-  return label;
 }
 
 function UserAvatar({ name, avatar }: { name: string; avatar: string | null }) {
@@ -86,9 +65,9 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export function UserRow({ user, onEdit, onDelete }: UserRowProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const lastActiveLabel = useRelativeTime(user.lastActive);
-  const createdAtLabel = useRelativeTime(user.createdAt);
+  const absoluteLastActive = formatDate(user.lastActive);
+  const createdAtLabel = formatDate(user.createdAt);
 
   return (
     <TableRow>
@@ -109,37 +88,47 @@ export function UserRow({ user, onEdit, onDelete }: UserRowProps) {
       </TableCell>
 
       {/* Last Active */}
-      <TableCell className="text-gray-500">{lastActiveLabel}</TableCell>
+      <TableCell className="text-gray-500">
+        <Tooltip>
+          <TooltipTrigger className="underline decoration-dashed underline-offset-4 cursor-default">
+            {lastActiveLabel}
+          </TooltipTrigger>
+          <TooltipContent>{absoluteLastActive}</TooltipContent>
+        </Tooltip>
+      </TableCell>
 
       {/* Created Date */}
       <TableCell className="text-gray-500">{createdAtLabel}</TableCell>
 
       {/* Actions */}
-      <TableCell className="relative text-right">
-        <button
-          onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-          className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
-          aria-label="User actions"
+      <TableCell className="text-right">
+        <ActionMenu
+          button={
+            <button
+              className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              aria-label="User actions"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          }
         >
-          <MoreHorizontal className="h-5 w-5" />
-        </button>
-
-        {menuOpen && (
-          <div className="absolute right-8 top-10 z-20 w-40 animate-in fade-in zoom-in-95 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit?.(user); }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-            >
-              <Pencil className="h-4 w-4" /> Edit
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete?.(user); }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
-          </div>
-        )}
+          {(close) => (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); close(); onEdit?.(user); }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <Pencil className="h-4 w-4" /> Edit
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); close(); onDelete?.(user); }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-500 dark:hover:bg-red-500/10"
+              >
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
+            </>
+          )}
+        </ActionMenu>
       </TableCell>
     </TableRow>
   );

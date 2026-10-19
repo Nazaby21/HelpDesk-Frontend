@@ -18,9 +18,18 @@ export function Pagination({
   totalResults,
   resultsPerPage,
 }: PaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-  
-  // Logic to show limited pages with dots could be added here for large totalPages
+  let pages: (number | string)[] = [];
+  if (totalPages <= 7) {
+    pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  } else {
+    if (currentPage <= 4) {
+      pages = [1, 2, 3, 4, 5, '...', totalPages];
+    } else if (currentPage >= totalPages - 3) {
+      pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    } else {
+      pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+    }
+  }
 
   return (
     <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-6 mt-6 ${className}`}>
@@ -46,11 +55,13 @@ export function Pagination({
           <ChevronLeft className="h-4 w-4" />
         </button>
         
-        {pages.map((page) => (
+        {pages.map((page, index) => (
           <button
-            key={page}
-            onClick={() => onPageChange(page)}
+            key={index}
+            onClick={() => typeof page === 'number' && onPageChange(page)}
+            disabled={page === '...'}
             className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
+              page === '...' ? 'cursor-default text-gray-400' :
               currentPage === page
                 ? "bg-black text-white"
                 : "text-gray-600 hover:bg-gray-100"

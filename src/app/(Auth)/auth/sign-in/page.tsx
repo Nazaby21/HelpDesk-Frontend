@@ -33,16 +33,9 @@ export default function SignInPage() {
 
     try {
       const response = await login({ email, password }).unwrap();
-      console.log("RAW LOGIN RESPONSE:", response);
       
       const token = response.accessToken || (response as any).token;
 
-      if (!token) {
-        console.warn("API Login Response matched no token key:", response);
-      } else {
-        console.log("EXTRACTED TOKEN:", token);
-      }
-      
       // On Success
       dispatch(setToken(token));
       dispatch(
@@ -54,7 +47,6 @@ export default function SignInPage() {
       
       // router.push("/dashboard"); // AuthGuard typically handles this
     } catch (err: any) {
-      console.error("Login Error Object:", err);
       if (err?.status === "FETCH_ERROR") {
         setError("Network error: Cannot reach the backend server. Is it running?");
       } else {

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { useGetTicketsQuery, useGetTicketHistoryQuery, useGetDashboardStatsQuery } from "@/redux/feature/ticket/ticketApi";
+import { useGetMonthlyStatsQuery, useGetDashboardStatsQuery } from "@/redux/feature/ticket/ticketApi";
 import { PaymentsOverviewChart } from "./chart";
 
 type PropsType = {
@@ -12,35 +12,18 @@ type PropsType = {
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function PaymentsOverview({ className }: PropsType) {
-  const { data: activeTickets = [], isLoading: loadingActive } = useGetTicketsQuery();
-  const { data: historyTickets = [], isLoading: loadingHistory } = useGetTicketHistoryQuery();
+  const currentYear = new Date().getFullYear();
+  const { data: monthlyStats, isLoading: loadingMonthly } = useGetMonthlyStatsQuery({ year: currentYear });
   const { data: stats, isLoading: loadingStats } = useGetDashboardStatsQuery();
 
-  const isLoading = loadingActive || loadingHistory || loadingStats;
+  const isLoading = loadingMonthly || loadingStats;
 
   const data = useMemo(() => {
-    const completedByMonth = new Array(12).fill(0);
-    const pendingByMonth = new Array(12).fill(0);
-
-    // Active tickets (PENDING + IN_PROGRESS)
-    activeTickets.forEach((t) => {
-      if (!t.createdAt) return;
-      const month = new Date(t.createdAt).getMonth();
-      pendingByMonth[month]++;
-    });
-
-    // History tickets (COMPLETED)
-    historyTickets.forEach((t) => {
-      if (!t.createdAt) return;
-      const month = new Date(t.createdAt).getMonth();
-      completedByMonth[month]++;
-    });
-
     return {
-      received: MONTH_LABELS.map((label, i) => ({ x: label, y: completedByMonth[i] })),
-      due: MONTH_LABELS.map((label, i) => ({ x: label, y: pendingByMonth[i] })),
+      received: MONTH_LABELS.map((label, i) => ({ x: label, y: monthlyStats?.received?.[i] || 0 })),
+      due: MONTH_LABELS.map((label, i) => ({ x: label, y: monthlyStats?.due?.[i] || 0 })),
     };
-  }, [activeTickets, historyTickets]);
+  }, [monthlyStats]);
 
   if (isLoading) {
     return (

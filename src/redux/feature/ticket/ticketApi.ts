@@ -38,6 +38,19 @@ export interface DashboardStats {
   totalUsers: number;
 }
 
+export interface MonthlyChartResponse {
+  received: number[];
+  due: number[];
+}
+
+export interface NotificationResponse {
+  id: number;
+  image: string;
+  title: string;
+  subTitle: string;
+  createdAt: string;
+}
+
 export const ticketApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getTickets: builder.query<TicketResponse[], void>({
@@ -71,6 +84,18 @@ export const ticketApi = api.injectEndpoints({
       query: () => "tickets/stats",
       providesTags: ["Ticket"],
     }),
+    getMonthlyStats: builder.query<MonthlyChartResponse, { year?: number }>({
+      query: ({ year }) => (year ? `tickets/stats/monthly?year=${year}` : "tickets/stats/monthly"),
+      providesTags: ["Ticket"],
+    }),
+    getActivityFeed: builder.query<NotificationResponse[], void>({
+      query: () => "tickets/activity",
+      transformResponse: (response: any) => {
+        if (response?.content) return response.content;
+        return [];
+      },
+      providesTags: ["Ticket"],
+    }),
     createTicket: builder.mutation<TicketResponse, Partial<TicketResponse>>({
       query: (body) => ({
         url: "tickets",
@@ -97,5 +122,5 @@ export const ticketApi = api.injectEndpoints({
   }),
 });
 
-export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useGetDashboardStatsQuery, useCreateTicketMutation, useUpdateTicketStatusMutation, useUploadImageMutation } = ticketApi;
+export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useGetDashboardStatsQuery, useGetMonthlyStatsQuery, useGetActivityFeedQuery, useCreateTicketMutation, useUpdateTicketStatusMutation, useUploadImageMutation } = ticketApi;
 

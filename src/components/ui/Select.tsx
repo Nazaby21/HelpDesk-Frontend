@@ -1,4 +1,4 @@
-import React, { SelectHTMLAttributes, forwardRef } from "react";
+import React, { SelectHTMLAttributes, forwardRef, useId } from "react";
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -9,7 +9,8 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className = "", label, error, hint, options, id, ...props }, ref) => {
-    const selectId = id || Math.random().toString(36).substring(7);
+    const reactId = useId();
+    const selectId = id || reactId;
 
     return (
       <div className="w-full space-y-2">

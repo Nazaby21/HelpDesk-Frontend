@@ -1,43 +1,43 @@
 export function formatMessageTime(timestamp: string) {
   const messageDate = new Date(timestamp);
   const now = new Date();
+  
+  // If the server and client are comparing with Date.now(), hydration mismatch could still happen
+  // However, fixing the timezone and locale is the main goal here.
   const diffInMinutes = Math.floor(
     (now.getTime() - messageDate.getTime()) / (60 * 1000),
   );
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
+  const diffInDays = Math.floor(diffInMinutes / (60 * 24));
 
-  // For messages from today, show time
   if (diffInDays === 0) {
-    // If less than 60 minutes ago, show "X min"
     if (diffInMinutes < 60) {
       return diffInMinutes === 0 ? "just now" : `${diffInMinutes}m`;
     }
-    // Otherwise show time like "4:39 PM"
-    return messageDate.toLocaleTimeString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-    });
+      timeZone: "Asia/Phnom_Penh"
+    }).format(messageDate);
   }
 
-  // For messages from this week, show day name
   if (diffInDays < 7) {
-    return messageDate.toLocaleDateString("en-US", { weekday: "long" });
+    return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "Asia/Phnom_Penh" }).format(messageDate);
   }
 
-  // For messages from this year, show date
   if (messageDate.getFullYear() === now.getFullYear()) {
-    return messageDate.toLocaleDateString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       day: "numeric",
       month: "short",
-    });
+      timeZone: "Asia/Phnom_Penh"
+    }).format(messageDate);
   }
 
-  // For older messages, show date with year
-  return messageDate.toLocaleDateString("en-US", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
-  });
+    timeZone: "Asia/Phnom_Penh"
+  }).format(messageDate);
 }
+

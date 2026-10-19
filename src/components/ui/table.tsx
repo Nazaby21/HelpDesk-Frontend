@@ -6,7 +6,7 @@ export function Table({
   ...props
 }: React.HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="relative w-full overflow-auto">
+    <div className="relative w-full overflow-x-auto">
       <table
         className={cn("w-full caption-bottom text-sm", className)}
         {...props}

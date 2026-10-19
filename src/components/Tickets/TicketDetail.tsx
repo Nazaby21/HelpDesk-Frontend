@@ -8,6 +8,7 @@ import { Toast } from "@/components/ui/Toast";
 import { useGetTicketByIdQuery, useUpdateTicketStatusMutation } from "@/redux/feature/ticket/ticketApi";
 import { useRole } from "@/app/role-context";
 import { TicketChat } from "./TicketChat";
+import { formatDateTime } from "@/utils/date";
 
 const priorityVariant: Record<string, "error" | "orange" | "warning" | "default"> = {
   HIGH: "error",
@@ -49,9 +50,7 @@ export default function TicketDetail() {
       rawStatus: ticketResponse.status,
       status,
       assignedTo: ticketResponse.assignedName ? { name: ticketResponse.assignedName } : null,
-      created: ticketResponse.createdAt
-        ? new Date(ticketResponse.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        : "Unknown",
+      created: ticketResponse.createdAt ? formatDateTime(ticketResponse.createdAt) : "Unknown",
       imageUrl: ticketResponse.imageUrl,
       imageUrls: ticketResponse.imageUrls || [],
     };
@@ -87,11 +86,11 @@ export default function TicketDetail() {
   return (
     <>
       <div className="mx-auto w-full">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-3 dark:bg-gray-dark">
           {/* Header */}
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className="mb-6 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to tickets
@@ -105,7 +104,7 @@ export default function TicketDetail() {
                 <Badge variant="info">{ticket.status}</Badge>
                 <Badge variant={pBadgeVariant}>{ticket.priority}</Badge>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">{ticket.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{ticket.title}</h1>
             </div>
 
             {/* Role-based action buttons */}
@@ -137,26 +136,26 @@ export default function TicketDetail() {
           <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="text-sm text-gray-500">Requester</div>
-              <div className="mt-1 font-medium text-gray-900">
+              <div className="mt-1 font-medium text-gray-900 dark:text-white">
                 {ticket.requester.name}
               </div>
               <div className="text-sm text-gray-500">{ticket.requester.email}</div>
             </div>
             <div>
               <div className="text-sm text-gray-500">Assigned To</div>
-              <div className="mt-1 font-medium text-gray-900">
+              <div className="mt-1 font-medium text-gray-900 dark:text-white">
                 {ticket.assignedTo?.name || "Unassigned"}
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-500">Department</div>
-              <div className="mt-1 font-medium text-gray-900">
+              <div className="mt-1 font-medium text-gray-900 dark:text-white">
                 {ticket.department}
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-500">Created</div>
-              <div className="mt-1 flex items-center gap-1.5 font-medium text-gray-900">
+              <div className="mt-1 flex items-center gap-1.5 font-medium text-gray-900 dark:text-white">
                 <Clock className="h-4 w-4 text-gray-400" />
                 <span className="text-sm">{ticket.created}</span>
               </div>
@@ -164,18 +163,18 @@ export default function TicketDetail() {
           </div>
 
           {/* Description */}
-          <div className="border-t border-gray-100 pt-8">
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">
+          <div className="border-t border-gray-100 dark:border-dark-3 pt-8">
+            <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
               Description
             </h3>
-            <div className="prose prose-sm max-w-none text-gray-600">
+            <div className="prose prose-sm max-w-none text-gray-600 dark:text-gray-400">
               <p>{ticket.description}</p>
             </div>
             
             {/* Legacy Fallback: Singular Image */}
             {ticket.imageUrl && ticket.imageUrls.length === 0 && (
               <div className="mt-8">
-                <h4 className="mb-4 text-sm font-semibold text-gray-900">Attachment</h4>
+                <h4 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Attachment</h4>
                 <a href={ticket.imageUrl} target="_blank" rel="noopener noreferrer" className="block relative group w-max">
                   <img 
                     src={ticket.imageUrl} 
@@ -190,9 +189,9 @@ export default function TicketDetail() {
             {/* New Multi-Image Support */}
             {ticket.imageUrls.length > 0 && (
               <div className="mt-8">
-                <h4 className="mb-4 text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <h4 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   Attachments
-                  <Badge variant="default" className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent">
+                  <Badge variant="default" className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
                     {ticket.imageUrls.length}
                   </Badge>
                 </h4>

@@ -7,17 +7,20 @@ import { Toast } from "@/components/ui/Toast";
 import { TicketTable } from "@/components/Tickets/TicketTable";
 import { Ticket, TicketPriority, TicketStatus } from "@/components/Tickets/TicketRow";
 import { useGetTicketHistoryQuery, TicketResponse } from "@/redux/feature/ticket/ticketApi";
+import { formatDate } from "@/utils/date";
 
+
+const statusMap: Record<string, TicketStatus> = {
+  PENDING: 'Pending',
+  IN_PROGRESS: 'In Progress',
+  COMPLETED: 'Completed',
+};
 export default function UserHistoryPage() {
   const router = useRouter();
   
   const { data: ticketResponses = [], isLoading } = useGetTicketHistoryQuery();
 
-  const statusMap: Record<string, TicketStatus> = {
-    PENDING: "Pending",
-    IN_PROGRESS: "In Progress",
-    COMPLETED: "Completed",
-  };
+
 
   const [showToast, setShowToast] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,8 +40,8 @@ export default function UserHistoryPage() {
         priority: (tr.priority as TicketPriority) || "Medium",
         status,
         assignedTo: tr.assignedName ? { name: tr.assignedName } : null,
-        createdDate: new Date(tr.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
-        completedDate: tr.completedAt ? new Date(tr.completedAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }) : undefined,
+        createdDate: formatDate(tr.createdAt),
+        completedDate: tr.completedAt ? formatDate(tr.completedAt) : undefined,
       };
     });
 
@@ -77,10 +80,11 @@ export default function UserHistoryPage() {
   if (isLoading) return <div className="p-8">Loading history...</div>;
 
   return (
-    <>
-      <div className="space-y-10">
-        <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
-          <TicketTable
+    <div className="mx-auto w-full">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-dark">
+        <TicketTable
+            title="Ticket History"
+            subtitle="View your past resolved or closed tickets."
             tickets={currentTickets}
             onActionClick={handleActionClick}
             onCreateClick={() => router.push("/incident-catalog")}
@@ -104,6 +108,8 @@ export default function UserHistoryPage() {
           message="Ticket action successful"
         />
       </div>
-    </>
   );
 }
+
+
+

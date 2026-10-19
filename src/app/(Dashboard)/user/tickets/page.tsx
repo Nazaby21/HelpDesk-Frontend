@@ -8,19 +8,21 @@ import { TicketTable } from "@/components/Tickets/TicketTable";
 import { Ticket, TicketPriority, TicketStatus } from "@/components/Tickets/TicketRow";
 import { useRole } from "@/app/role-context";
 import { useGetMyTicketsQuery } from "@/redux/feature/ticket/ticketApi";
+import { formatDate } from "@/utils/date";
 
+
+const statusMap: Record<string, TicketStatus> = {
+  PENDING: 'Pending',
+  IN_PROGRESS: 'In Progress',
+  COMPLETED: 'Completed',
+};
 export default function UserTicketsPage() {
   const router = useRouter();
   const { role } = useRole();
   
   const { data: ticketResponses = [], isLoading, error } = useGetMyTicketsQuery();
-  console.log("MY TICKETS API RESPONSE:", ticketResponses, error);
 
-  const statusMap: Record<string, TicketStatus> = {
-    PENDING: "Pending",
-    IN_PROGRESS: "In Progress",
-    COMPLETED: "Completed",
-  };
+
 
 
 
@@ -43,7 +45,7 @@ export default function UserTicketsPage() {
         priority: (tr.priority as TicketPriority) || "Medium",
         status,
         assignedTo: tr.assignedName ? { name: tr.assignedName } : null,
-        createdDate: new Date(tr.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
+        createdDate: formatDate(tr.createdAt),
       };
     });
 
@@ -85,10 +87,11 @@ export default function UserTicketsPage() {
   if (isLoading) return <div className="p-8">Loading tickets...</div>;
 
   return (
-    <>
-      <div className="space-y-10">
-        <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
-          <TicketTable
+    <div className="mx-auto w-full">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-dark">
+        <TicketTable
+            title="My Tickets"
+            subtitle="View and track the status of your reported tickets."
             tickets={currentTickets}
             hideAssignedTo={true}
             onActionClick={handleActionClick}
@@ -112,6 +115,8 @@ export default function UserTicketsPage() {
           message={toastMessage}
         />
       </div>
-    </>
   );
 }
+
+
+

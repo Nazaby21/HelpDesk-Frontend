@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/Badge";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { MoreHorizontal } from "lucide-react";
 import { useRole } from "@/app/role-context";
+import { ActionMenu } from "@/components/ui/ActionMenu";
 
 export type TicketStatus = "Pending" | "In Progress" | "Completed";
 export type TicketPriority = "Low" | "Medium" | "High";
@@ -21,8 +22,6 @@ export interface Ticket {
 
 interface TicketRowProps {
   ticket: Ticket;
-  activeMenuId: string | null;
-  onMenuToggle: (id: string | null) => void;
   onActionClick: (action: string, ticket: Ticket) => void;
   hideAssignedTo?: boolean;
   showCompletedDate?: boolean;
@@ -30,14 +29,11 @@ interface TicketRowProps {
 
 export function TicketRow({
   ticket,
-  activeMenuId,
-  onMenuToggle,
   onActionClick,
   hideAssignedTo = false,
   showCompletedDate = false,
 }: TicketRowProps) {
   const { role } = useRole();
-  const isMenuOpen = activeMenuId === ticket.id;
 
   const StatusBadge = ({ status }: { status: TicketStatus }) => {
     const variants: Record<TicketStatus, any> = {
@@ -108,67 +104,72 @@ export function TicketRow({
         </TableCell>
       )}
       <TableCell className="relative text-right">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onMenuToggle(isMenuOpen ? null : ticket.id);
-          }}
-          className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none"
-        >
-          <MoreHorizontal className="h-5 w-5" />
-        </button>
-
-        {isMenuOpen && (
-          <div className="absolute right-8 top-10 z-10 w-48 animate-in fade-in zoom-in-95 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+        <ActionMenu
+          button={
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onActionClick("view", ticket);
-              }}
-              className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+              aria-label="Ticket actions"
+              className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none"
             >
-              View Details
+              <MoreHorizontal className="h-5 w-5" />
             </button>
-
-            {/* Edit (Users Only - and only if Pending) */}
-            {role === "user" && ticket.status === "Pending" && (
+          }
+        >
+          {(close) => (
+            <>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onActionClick("edit", ticket);
+                  onActionClick("view", ticket);
+                  close();
                 }}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
               >
-                Edit
+                View Details
               </button>
-            )}
 
-            {/* Technician/Admin Actions */}
-            {role !== "user" && ticket.status === "Pending" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onActionClick("accept", ticket);
-                }}
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Accept
-              </button>
-            )}
+              {/* Edit (Users Only - and only if Pending) */}
+              {role === "user" && ticket.status === "Pending" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onActionClick("edit", ticket);
+                    close();
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Edit
+                </button>
+              )}
 
-            {role !== "user" && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onActionClick("close", ticket);
-                }}
-                className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-              >
-                Close Ticket
-              </button>
-            )}
-          </div>
-        )}
+              {/* Technician/Admin Actions */}
+              {role !== "user" && ticket.status === "Pending" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onActionClick("accept", ticket);
+                    close();
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Accept
+                </button>
+              )}
+
+              {role !== "user" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onActionClick("close", ticket);
+                    close();
+                  }}
+                  className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-500 dark:hover:bg-red-500/10"
+                >
+                  Close Ticket
+                </button>
+              )}
+            </>
+          )}
+        </ActionMenu>
       </TableCell>
     </TableRow>
   );

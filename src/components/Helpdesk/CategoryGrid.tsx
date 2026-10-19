@@ -16,6 +16,7 @@ import {
   Wifi,
 } from "lucide-react";
 import React, { useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface CategoryGridProps {
   onCategorySelect: (category: string) => void;
@@ -45,38 +46,36 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-      <div className="px-8 flex flex-col md:flex-row justify-between md:items-center py-6 border-b border-gray-100 dark:border-gray-800 gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Incident Catalog
-          </h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Select a category to report an issue or request what you need.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="relative w-full md:w-64">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+      <div className="p-8 pb-0">
+        <PageHeader
+          title="Incident Catalog"
+          subtitle="Select a category to report an issue or request what you need."
+          action={
+            <div className="flex items-center gap-3">
+              <div className="relative w-full md:w-64">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="block w-full rounded-xl border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
+                  placeholder="Search categories"
+                />
+              </div>
+              {onCreateCategory && (
+                <button
+                  onClick={onCreateCategory}
+                  className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-800 transition-colors shrink-0"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Category
+                </button>
+              )}
             </div>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="block w-full rounded-xl border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
-              placeholder="Search categories"
-            />
-          </div>
-          {onCreateCategory && (
-            <button
-              onClick={onCreateCategory}
-              className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-gray-800 transition-colors shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              Create Category
-            </button>
-          )}
-        </div>
+          }
+        />
       </div>
 
       <div className="flex-1 p-8 overflow-y-auto">

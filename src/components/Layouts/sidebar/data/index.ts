@@ -58,7 +58,7 @@ export const getNavData = (role: UserRole): NavSection[] => {
           items: [] as any[],
         },
         {
-          title: "View All Ticket",
+          title: "View All Tickets",
           url: "/tickets",
           icon: Icons.Table,
           roles: ["admin", "technician"],

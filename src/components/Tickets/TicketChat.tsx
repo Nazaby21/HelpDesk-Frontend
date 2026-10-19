@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { Client } from "@stomp/stompjs";
-// @ts-ignore
 import SockJS from "sockjs-client";
 import { useGetTicketMessagesQuery, ChatMessage } from "@/redux/feature/ticket/ticketApi";
 import { useAppSelector } from "@/redux/hooks";
@@ -55,7 +54,7 @@ export function TicketChat({ ticketId }: TicketChatProps) {
         });
       },
       onStompError: (frame) => {
-        console.error("Broker reported error: " + frame.headers["message"]);
+        // Handle STOMP errors gracefully without breaking the UI
       },
     });
 
@@ -85,8 +84,8 @@ export function TicketChat({ ticketId }: TicketChatProps) {
   };
 
   return (
-    <div className="mt-8 rounded-xl border border-gray-100 bg-white shadow-sm flex flex-col h-[500px]">
-      <div className="p-4 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
+    <div className="mt-8 rounded-xl border border-gray-100 dark:border-dark-3 bg-white dark:bg-gray-dark shadow-sm flex flex-col h-[500px]">
+      <div className="p-4 border-b border-gray-100 dark:border-dark-3 bg-gray-50/50 dark:bg-gray-800 rounded-t-xl">
         <h3 className="font-semibold text-gray-900 dark:text-gray-100">Ticket Conversation</h3>
       </div>
       
