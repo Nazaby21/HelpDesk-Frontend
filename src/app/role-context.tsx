@@ -3,8 +3,6 @@
 import React from "react";
 import { useAppSelector } from "@/redux/hooks";
 import { selectCurrentRole } from "@/redux/feature/auth/authSlice";
-import { store } from "@/redux/store";
-import type { RootState } from "@/redux/store";
 
 export type UserRole = "ADMIN" | "TECHNICIAN" | "USER" | string;
 

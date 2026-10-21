@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 import { useLoginMutation } from "@/redux/feature/auth/authApi";
 import { useAppDispatch } from "@/redux/hooks";
@@ -9,7 +8,6 @@ import { setUser } from "@/redux/feature/auth/authSlice";
 import { setToken } from "@/redux/feature/auth/tokenSlice";
 
 export default function SignInPage() {
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

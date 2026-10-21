@@ -1,17 +1,14 @@
 "use client";
 
-import { ChevronUpIcon } from "@/assets/icons";
 import {
   Dropdown,
   DropdownContent,
   DropdownTrigger,
 } from "@/components/ui/dropdown";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
-import { useRole } from "@/app/role-context";
+import { LogOutIcon, SettingsIcon } from "./icons";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { selectCurrentUser, clearAuth } from "@/redux/feature/auth/authSlice";
 import { clearToken } from "@/redux/feature/auth/tokenSlice";
@@ -19,7 +16,6 @@ import { useLogoutMutation } from "@/redux/feature/auth/authApi";
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
-  const { role } = useRole();
   const currentUser = useAppSelector(selectCurrentUser);
   const dispatch = useAppDispatch();
   const [logoutApi] = useLogoutMutation();

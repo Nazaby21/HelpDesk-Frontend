@@ -1,28 +1,6 @@
 import * as Icons from "../icons";
 import { UserRole } from "@/app/role-context";
-import { INCIDENT_CATEGORIES } from "@/data/incidents";
-import {
-  Activity,
-  AlertTriangle,
-  Database,
-  Headphones,
-  LayoutGrid,
-  Monitor,
-  Server,
-  Shield,
-  Wifi,
-} from "lucide-react";
-
-const categoryIcons: Record<string, any> = {
-  "IT Database Administration Issue": Database,
-  "IT Incident Management": AlertTriangle,
-  "IT In-House System Issue": Server,
-  "IT MIS & Analytics Issue": Activity,
-  "IT Network Issue": Wifi,
-  "IT Security Issue": Shield,
-  "IT Support Issue": Headphones,
-  "IT System Issue": Monitor,
-};
+import { AlertTriangle, LayoutGrid } from "lucide-react";
 
 export interface NavItem {
   title: string;

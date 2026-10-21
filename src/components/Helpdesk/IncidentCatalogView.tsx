@@ -4,7 +4,6 @@ import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
 import { CategoryGrid } from "@/components/Helpdesk/CategoryGrid";
 import { CreateCategoryModal } from "@/components/Helpdesk/CreateCategoryModal";
 import { IncidentList } from "@/components/Helpdesk/IncidentList";
-import { Sidebar } from "@/components/Helpdesk/Sidebar";
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRole } from "@/app/role-context";
