@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.API_URL || "http://localhost:8080";
+const NULL_BODY_STATUSES = [101, 204, 205, 304];
 
 async function proxyRequest(req: NextRequest) {
   const url = new URL(req.url);
@@ -23,10 +24,14 @@ async function proxyRequest(req: NextRequest) {
 
   try {
     const response = await fetch(backendUrl, init);
-    const data = await response.arrayBuffer();
+    const data = NULL_BODY_STATUSES.includes(response.status)
+      ? null
+      : await response.arrayBuffer();
 
     const responseHeaders = new Headers(response.headers);
     // Remove headers that shouldn't be forwarded
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("content-length");
     responseHeaders.delete("transfer-encoding");
 
     return new NextResponse(data, {
