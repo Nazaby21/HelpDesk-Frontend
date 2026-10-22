@@ -4,7 +4,6 @@ import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
 import {
   Activity,
   AlertTriangle,
-  Database,
   Headphones,
   LayoutGrid,
   Loader2,

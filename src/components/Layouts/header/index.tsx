@@ -1,16 +1,13 @@
 "use client";
 
-import { SearchIcon } from "@/assets/icons";
-import Image from "next/image";
 import Link from "next/link";
 import { useSidebarContext } from "../sidebar/sidebar-context";
 import { MenuIcon } from "./icons";
-import { ThemeToggleSwitch } from "./theme-toggle";
 import { UserInfo } from "./user-info";
 import { useRole } from "@/app/role-context";
 
 export function Header() {
-  const { toggleSidebar, isMobile } = useSidebarContext();
+  const { toggleSidebar } = useSidebarContext();
   const { role } = useRole();
 
   return (

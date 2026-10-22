@@ -8,7 +8,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import {
   useGetCategoriesQuery,
   useDeleteCategoryMutation,
-  Category,
 } from "@/redux/feature/category/categoryApi";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 import { Toast } from "@/components/ui/Toast";

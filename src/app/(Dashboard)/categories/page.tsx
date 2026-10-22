@@ -4,7 +4,6 @@ import React from "react";
 import { CategoryManager } from "@/components/Categories/CategoryManager";
 import { useRole } from "@/app/role-context";
 import { redirect } from "next/navigation";
-import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function CategoriesPage() {
   const { role } = useRole();

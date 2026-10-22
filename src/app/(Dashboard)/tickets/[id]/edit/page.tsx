@@ -1,5 +1,4 @@
 import React from "react";
-import { INCIDENT_TEMPLATES } from "@/data/incidents";
 import { TicketDetailView } from "@/components/Helpdesk/ticket/TicketDetailView";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
