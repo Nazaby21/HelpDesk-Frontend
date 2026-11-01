@@ -7,12 +7,12 @@ import { CameraIcon } from "@/components/Profile/icons";
 
 import { useAppSelector } from "@/redux/hooks";
 import { selectCurrentUser } from "@/redux/feature/auth/authSlice";
-import { useGetUserByIdQuery } from "@/redux/feature/user/userApi";
+import { useGetCurrentUserQuery } from "@/redux/feature/user/userApi";
 import { formatDate } from "@/utils/date";
 
 export function ProfileView() {
   const currentUser = useAppSelector(selectCurrentUser);
-  const { data: userProfile } = useGetUserByIdQuery(currentUser?.id as number, { skip: !currentUser?.id });
+  const { data: userProfile } = useGetCurrentUserQuery();
 
   const [data, setData] = useState({
     name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "User Profile",
@@ -162,4 +162,3 @@ export function ProfileView() {
     </div>
   );
 }
-

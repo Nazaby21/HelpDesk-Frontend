@@ -53,6 +53,10 @@ export const userApi = api.injectEndpoints({
       query: (id) => `users/${id}`,
       providesTags: (result, error, id) => [{ type: "User", id }],
     }),
+    getCurrentUser: builder.query<UserResponse, void>({
+      query: () => "users/me",
+      providesTags: ["User"],
+    }),
     updateUser: builder.mutation<UserResponse, { id: number | string; data: Partial<CreateUserDto> }>({
       query: ({ id, data }) => ({
         url: `users/${id}`,
@@ -69,5 +73,6 @@ export const {
   useCreateUserMutation, 
   useDeleteUserMutation,
   useGetUserByIdQuery,
+  useGetCurrentUserQuery,
   useUpdateUserMutation
 } = userApi;

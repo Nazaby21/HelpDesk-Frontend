@@ -104,6 +104,14 @@ export const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
+    updateTicket: builder.mutation<TicketResponse, { id: string | number; data: Partial<TicketResponse> }>({
+      query: ({ id, data }) => ({
+        url: `tickets/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Ticket", id }, "Ticket"],
+    }),
     updateTicketStatus: builder.mutation<TicketResponse, { id: string | number; status: string; remark?: string }>({
       query: ({ id, status, remark }) => ({
         url: `tickets/${id}/status`,
@@ -122,5 +130,17 @@ export const ticketApi = api.injectEndpoints({
   }),
 });
 
-export const { useGetTicketsQuery, useGetTicketHistoryQuery, useGetTicketByIdQuery, useGetTicketMessagesQuery, useGetMyTicketsQuery, useGetDashboardStatsQuery, useGetMonthlyStatsQuery, useGetActivityFeedQuery, useCreateTicketMutation, useUpdateTicketStatusMutation, useUploadImageMutation } = ticketApi;
-
+export const { 
+  useGetTicketsQuery, 
+  useGetTicketHistoryQuery, 
+  useGetTicketByIdQuery, 
+  useGetTicketMessagesQuery, 
+  useGetMyTicketsQuery, 
+  useGetDashboardStatsQuery, 
+  useGetMonthlyStatsQuery, 
+  useGetActivityFeedQuery, 
+  useCreateTicketMutation, 
+  useUpdateTicketMutation,
+  useUpdateTicketStatusMutation, 
+  useUploadImageMutation 
+} = ticketApi;

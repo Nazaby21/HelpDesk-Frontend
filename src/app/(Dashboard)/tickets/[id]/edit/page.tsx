@@ -1,5 +1,5 @@
 import React from "react";
-import { TicketDetailView } from "@/components/Helpdesk/ticket/TicketDetailView";
+import { EditTicketView } from "@/components/Helpdesk/ticket/EditTicketView";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 interface PageProps {
@@ -10,13 +10,11 @@ interface PageProps {
 
 export default async function EditTicketPage({ params }: PageProps) {
   const { id } = await params;
-  
-
 
   return (
     <>
       <Breadcrumb pageName="Edit Ticket" />
-      <TicketDetailView id={id} />
+      <EditTicketView id={id} />
     </>
   );
 }
