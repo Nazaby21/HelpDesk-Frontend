@@ -6,8 +6,14 @@ import Image from "next/image";
 import { TicketDescription } from "@/components/Helpdesk/ticket/TicketDescription";
 import { FileUploadBox } from "@/components/Helpdesk/ticket/FileUploadBox";
 import { Toast } from "@/components/ui/Toast";
-import { useGetTicketByIdQuery, useUpdateTicketMutation, useUploadImageMutation } from "@/redux/feature/ticket/ticketApi";
+import {
+  useGetTicketByIdQuery,
+  useUpdateTicketMutation,
+  useUploadImageMutation,
+} from "@/redux/feature/ticket/ticketApi";
 import { useGetCategoriesQuery } from "@/redux/feature/category/categoryApi";
+import { useGetUsersQuery } from "@/redux/feature/user/userApi";
+import { useRole } from "@/app/role-context";
 import { Button } from "@/components/ui/Button";
 
 interface EditTicketViewProps {
@@ -16,8 +22,11 @@ interface EditTicketViewProps {
 
 export function EditTicketView({ id }: EditTicketViewProps) {
   const router = useRouter();
+  const { role } = useRole();
+  const isAdmin = role === "admin";
   const { data: ticket, isLoading: isLoadingTicket, isError: isLoadError } = useGetTicketByIdQuery(id);
   const { data: categories = [] } = useGetCategoriesQuery();
+  const { data: users = [] } = useGetUsersQuery(undefined, { skip: !isAdmin });
   const [updateTicket, { isLoading: isSubmitting }] = useUpdateTicketMutation();
   const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
@@ -26,6 +35,7 @@ export function EditTicketView({ id }: EditTicketViewProps) {
   const [priority, setPriority] = useState("MEDIUM");
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [subCategoryId, setSubCategoryId] = useState<number | undefined>(undefined);
+  const [assignedTo, setAssignedTo] = useState<number | undefined>(undefined);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showToast, setShowToast] = useState(false);
@@ -39,6 +49,7 @@ export function EditTicketView({ id }: EditTicketViewProps) {
       setPriority(ticket.priority || "MEDIUM");
       setCategoryId(ticket.categoryId);
       setSubCategoryId(ticket.subCategoryId);
+      setAssignedTo(ticket.assignedTo ?? undefined);
       if (ticket.imageUrls && ticket.imageUrls.length > 0) {
         setExistingImages(ticket.imageUrls);
       } else if (ticket.imageUrl) {
@@ -46,6 +57,12 @@ export function EditTicketView({ id }: EditTicketViewProps) {
       }
     }
   }, [ticket]);
+
+  const selectedCategory = categories.find((c) => Number(c.id) === Number(categoryId));
+  const subCategories = selectedCategory?.subCategories || [];
+  const technicians = users.filter(
+    (u) => u.role?.toUpperCase() === "TECHNICIAN" || u.role?.toUpperCase() === "ADMIN"
+  );
 
   const handleRemoveExistingImage = (indexToRemove: number) => {
     setExistingImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
@@ -90,7 +107,8 @@ export function EditTicketView({ id }: EditTicketViewProps) {
           description,
           priority,
           categoryId: categoryId || ticket?.categoryId,
-          subCategoryId: subCategoryId || ticket?.subCategoryId,
+          subCategoryId: subCategoryId || undefined,
+          assignedTo: assignedTo || undefined,
           imageUrls: allImages,
         },
       }).unwrap();
@@ -134,7 +152,7 @@ export function EditTicketView({ id }: EditTicketViewProps) {
             Edit Ticket #{id}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Update details and attachments for this ticket.
+            Update details, category, assignment, and attachments for this ticket.
           </p>
         </div>
         <Button
@@ -184,7 +202,10 @@ export function EditTicketView({ id }: EditTicketViewProps) {
             </label>
             <select
               value={categoryId || ""}
-              onChange={(e) => setCategoryId(Number(e.target.value))}
+              onChange={(e) => {
+                setCategoryId(Number(e.target.value));
+                setSubCategoryId(undefined);
+              }}
               className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-800 dark:focus:border-white dark:text-white"
             >
               <option value="">Select Category</option>
@@ -195,6 +216,50 @@ export function EditTicketView({ id }: EditTicketViewProps) {
               ))}
             </select>
           </div>
+
+          {subCategories.length > 0 && (
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Sub-Issue
+              </label>
+              <select
+                value={subCategoryId || ""}
+                onChange={(e) =>
+                  setSubCategoryId(e.target.value ? Number(e.target.value) : undefined)
+                }
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-800 dark:focus:border-white dark:text-white"
+              >
+                <option value="">Optional Sub-Issue</option>
+                {subCategories.map((sub: any) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-gray-100">
+                Assign Technician
+              </label>
+              <select
+                value={assignedTo || ""}
+                onChange={(e) =>
+                  setAssignedTo(e.target.value ? Number(e.target.value) : undefined)
+                }
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-black focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-800 dark:focus:border-white dark:text-white"
+              >
+                <option value="">Unassigned</option>
+                {technicians.map((tech) => (
+                  <option key={tech.id} value={tech.id}>
+                    {tech.firstName} {tech.lastName} ({tech.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <TicketDescription value={description} onChange={setDescription} />
@@ -207,7 +272,14 @@ export function EditTicketView({ id }: EditTicketViewProps) {
             <div className="flex flex-wrap gap-4">
               {existingImages.map((url, idx) => (
                 <div key={idx} className="relative group rounded-lg border p-1 dark:border-gray-700">
-                  <Image src={url} alt="Attachment" width={80} height={80} className="h-20 w-20 rounded object-cover" unoptimized />
+                  <Image
+                    src={url}
+                    alt="Attachment"
+                    width={80}
+                    height={80}
+                    className="h-20 w-20 rounded object-cover"
+                    unoptimized
+                  />
                   <button
                     type="button"
                     onClick={() => handleRemoveExistingImage(idx)}

@@ -10,6 +10,7 @@ export type TicketPriority = "Low" | "Medium" | "High";
 
 export interface Ticket {
   id: string;
+  rawId?: string;
   title: string;
   requester: { name: string; email: string };
   department: string;
@@ -45,7 +46,8 @@ export function TicketRow({
   };
 
   const PriorityBadge = ({ priority }: { priority: TicketPriority }) => {
-    const normalized = priority?.charAt(0).toUpperCase() + priority?.slice(1).toLowerCase() as TicketPriority;
+    const normalized = (priority?.charAt(0).toUpperCase() +
+      priority?.slice(1).toLowerCase()) as TicketPriority;
     const variants: Record<TicketPriority, any> = {
       Low: "warning",
       Medium: "orange",
@@ -62,23 +64,23 @@ export function TicketRow({
           : ""
       }`}
     >
-      <TableCell className="font-medium text-gray-900">{ticket.id}</TableCell>
+      <TableCell className="font-medium text-gray-900 dark:text-white">{ticket.id}</TableCell>
       <TableCell
-        className="max-w-[200px] truncate font-semibold text-gray-900"
+        className="max-w-[200px] truncate font-semibold text-gray-900 dark:text-white"
         title={ticket.title}
       >
         {ticket.title}
       </TableCell>
       <TableCell>
         <div>
-          <div className="font-medium text-gray-900">
+          <div className="font-medium text-gray-900 dark:text-white">
             {ticket.requester.name}
           </div>
           <div className="text-xs text-gray-500">{ticket.requester.email}</div>
         </div>
       </TableCell>
       <TableCell>
-        <span className="text-gray-600">{ticket.department}</span>
+        <span className="text-gray-600 dark:text-gray-300">{ticket.department}</span>
       </TableCell>
       <TableCell>
         <PriorityBadge priority={ticket.priority} />
@@ -89,7 +91,7 @@ export function TicketRow({
       {!hideAssignedTo && (
         <TableCell>
           {ticket.assignedTo ? (
-            <span className="text-gray-700">{ticket.assignedTo.name}</span>
+            <span className="text-gray-700 dark:text-gray-300">{ticket.assignedTo.name}</span>
           ) : (
             <span className="text-gray-400 italic">Unassigned</span>
           )}
@@ -127,21 +129,33 @@ export function TicketRow({
                 View Details
               </button>
 
-              {/* Edit (Users Only - and only if Pending) */}
-              {role === "user" && ticket.status === "Pending" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onActionClick("edit", ticket);
-                    close();
-                  }}
-                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  Edit
-                </button>
+              {/* Edit & Delete (Users & Admins for non-Completed tickets) */}
+              {(role === "user" || role === "admin") && ticket.status !== "Completed" && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onActionClick("edit", ticket);
+                      close();
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    Edit Ticket
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onActionClick("delete", ticket);
+                      close();
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    Delete Ticket
+                  </button>
+                </>
               )}
 
-              {/* Technician/Admin Actions */}
+              {/* Technician/Admin Status Actions */}
               {role !== "user" && ticket.status === "Pending" && (
                 <button
                   onClick={(e) => {
@@ -149,20 +163,20 @@ export function TicketRow({
                     onActionClick("accept", ticket);
                     close();
                   }}
-                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="block w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-500/10"
                 >
                   Accept
                 </button>
               )}
 
-              {role !== "user" && (
+              {role !== "user" && ticket.status !== "Completed" && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onActionClick("close", ticket);
                     close();
                   }}
-                  className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-500 dark:hover:bg-red-500/10"
+                  className="block w-full px-4 py-2 text-left text-sm text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-500/10"
                 >
                   Close Ticket
                 </button>

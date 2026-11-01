@@ -7,7 +7,11 @@ import { Toast } from "@/components/ui/Toast";
 import { TicketTable } from "@/components/Tickets/TicketTable";
 import { Ticket } from "@/components/Tickets/TicketRow";
 import { useRole } from "@/app/role-context";
-import { useGetTicketsQuery, useUpdateTicketStatusMutation } from "@/redux/feature/ticket/ticketApi";
+import {
+  useGetTicketsQuery,
+  useUpdateTicketStatusMutation,
+  useDeleteTicketMutation,
+} from "@/redux/feature/ticket/ticketApi";
 import { formatDate } from "@/utils/date";
 
 function formatPriority(p: string): "Low" | "Medium" | "High" {
@@ -42,18 +46,19 @@ export default function AllTicketsPage() {
   const { role } = useRole();
   const { data: apiTickets, isLoading } = useGetTicketsQuery();
   const [updateTicketStatus] = useUpdateTicketStatusMutation();
+  const [deleteTicket] = useDeleteTicketMutation();
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
   const itemsPerPage = 7;
 
   const tickets: Ticket[] = React.useMemo(() => {
     if (!apiTickets) return [];
-    
-    // 1. Map to frontend format
+
     let mapped = apiTickets.map((t) => ({
       id: `#TCK-${t.id}`,
       rawId: t.id.toString(),
@@ -66,12 +71,18 @@ export default function AllTicketsPage() {
       createdDate: formatDate(t.createdAt),
     }));
 
-    // 2. Filter by status
     if (statusFilter !== "ALL") {
-      mapped = mapped.filter((t) => formatStatus(t.status).toUpperCase().replace(" ", "_") === statusFilter);
+      mapped = mapped.filter(
+        (t) => formatStatus(t.status).toUpperCase().replace(" ", "_") === statusFilter
+      );
     }
 
-    // 3. Filter by search
+    if (priorityFilter !== "ALL") {
+      mapped = mapped.filter(
+        (t) => t.priority.toUpperCase() === priorityFilter
+      );
+    }
+
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase();
       mapped = mapped.filter(
@@ -83,17 +94,29 @@ export default function AllTicketsPage() {
     }
 
     return mapped;
-  }, [apiTickets, statusFilter, searchQuery]);
+  }, [apiTickets, statusFilter, priorityFilter, searchQuery]);
 
-  // Pagination slicing
   const totalPages = Math.ceil(tickets.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentTickets = tickets.slice(startIndex, startIndex + itemsPerPage);
 
   const handleActionClick = (action: string, ticket: Ticket) => {
-    const rawId = (ticket as any).rawId;
+    const rawId = ticket.rawId ?? ticket.id.replace("#TCK-", "");
     if (action === "view") {
       router.push(`/tickets/${rawId}`);
+    } else if (action === "edit") {
+      router.push(`/tickets/${rawId}/edit`);
+    } else if (action === "delete") {
+      deleteTicket(rawId)
+        .unwrap()
+        .then(() => {
+          setToastMessage("Ticket deleted successfully");
+          setShowToast(true);
+        })
+        .catch((err) => {
+          setToastMessage(err?.data?.message || "Failed to delete ticket");
+          setShowToast(true);
+        });
     } else if (action === "accept") {
       updateTicketStatus({ id: rawId, status: "IN_PROGRESS", remark: "Accepted by technician" })
         .unwrap()
@@ -131,14 +154,24 @@ export default function AllTicketsPage() {
 
   return (
     <div className="mx-auto w-full">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-dark">
         <TicketTable
           tickets={currentTickets}
           hideAssignedTo={role === "user"}
           onActionClick={handleActionClick}
           onCreateClick={() => router.push("/incident-catalog")}
-          onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
-          onStatusFilterChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
+          onSearchChange={(val) => {
+            setSearchQuery(val);
+            setCurrentPage(1);
+          }}
+          onStatusFilterChange={(val) => {
+            setStatusFilter(val);
+            setCurrentPage(1);
+          }}
+          onPriorityFilterChange={(val) => {
+            setPriorityFilter(val);
+            setCurrentPage(1);
+          }}
         />
 
         <Pagination
@@ -148,13 +181,13 @@ export default function AllTicketsPage() {
           totalResults={tickets.length}
           resultsPerPage={itemsPerPage}
         />
-      </div>
 
-      <Toast
-        isOpen={showToast}
-        onClose={() => setShowToast(false)}
-        message={toastMessage}
-      />
+        <Toast
+          isOpen={showToast}
+          onClose={() => setShowToast(false)}
+          message={toastMessage}
+        />
+      </div>
     </div>
   );
 }

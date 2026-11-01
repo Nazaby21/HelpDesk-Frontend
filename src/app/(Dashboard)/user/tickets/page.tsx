@@ -6,55 +6,69 @@ import { Pagination } from "@/components/ui/Pagination";
 import { Toast } from "@/components/ui/Toast";
 import { TicketTable } from "@/components/Tickets/TicketTable";
 import { Ticket, TicketPriority, TicketStatus } from "@/components/Tickets/TicketRow";
-import { useRole } from "@/app/role-context";
-import { useGetMyTicketsQuery } from "@/redux/feature/ticket/ticketApi";
+import {
+  useGetMyTicketsQuery,
+  useDeleteTicketMutation,
+} from "@/redux/feature/ticket/ticketApi";
 import { formatDate } from "@/utils/date";
 
-
 const statusMap: Record<string, TicketStatus> = {
-  PENDING: 'Pending',
-  IN_PROGRESS: 'In Progress',
-  COMPLETED: 'Completed',
+  PENDING: "Pending",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
 };
+
+const priorityMap: Record<string, TicketPriority> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+};
+
 export default function UserTicketsPage() {
   const router = useRouter();
-  const { role } = useRole();
-  
-  const { data: ticketResponses = [], isLoading, error } = useGetMyTicketsQuery();
-
-
-
-
+  const { data: ticketResponses = [], isLoading } = useGetMyTicketsQuery();
+  const [deleteTicket] = useDeleteTicketMutation();
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
   const itemsPerPage = 7;
 
   const tickets: Ticket[] = useMemo(() => {
     let mapped = ticketResponses.map((tr) => {
       const status: TicketStatus = statusMap[tr.status] ?? "Pending";
+      const priority: TicketPriority = priorityMap[tr.priority] ?? "Medium";
       return {
         id: `#TCK-${tr.id.toString().padStart(3, "0")}`,
         rawId: tr.id.toString(),
         title: tr.ticketTitle,
         requester: { name: tr.createdByName || "Unknown", email: "" },
         department: tr.categoryName || "General",
-        priority: (tr.priority as TicketPriority) || "Medium",
+        priority,
         status,
         assignedTo: tr.assignedName ? { name: tr.assignedName } : null,
         createdDate: formatDate(tr.createdAt),
       };
     });
 
-    // Filter by status
     if (statusFilter !== "ALL") {
-      mapped = mapped.filter((t) => t.status.toUpperCase().replace(" ", "_") === statusFilter);
+      mapped = mapped.filter(
+        (t) => t.status.toUpperCase().replace(" ", "_") === statusFilter
+      );
     }
 
-    // Filter by search
+    if (priorityFilter !== "ALL") {
+      mapped = mapped.filter(
+        (t) => t.priority.toUpperCase() === priorityFilter
+      );
+    }
+
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase();
       mapped = mapped.filter(
@@ -66,18 +80,29 @@ export default function UserTicketsPage() {
     }
 
     return mapped;
-  }, [ticketResponses, statusFilter, searchQuery]);
+  }, [ticketResponses, statusFilter, priorityFilter, searchQuery]);
 
-  // Pagination slicing
   const totalPages = Math.ceil(tickets.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentTickets = tickets.slice(startIndex, startIndex + itemsPerPage);
 
   const handleActionClick = (action: string, ticket: Ticket) => {
+    const rawId = ticket.rawId ?? ticket.id.replace("#TCK-", "");
     if (action === "view") {
-      router.push(`/tickets/${(ticket as any).rawId ?? ticket.id.replace("#TCK-", "")}`);
+      router.push(`/tickets/${rawId}`);
     } else if (action === "edit") {
-      router.push("/incident-catalog");
+      router.push(`/tickets/${rawId}/edit`);
+    } else if (action === "delete") {
+      deleteTicket(rawId)
+        .unwrap()
+        .then(() => {
+          setToastMessage("Ticket deleted successfully");
+          setShowToast(true);
+        })
+        .catch((err) => {
+          setToastMessage(err?.data?.message || "Failed to delete ticket");
+          setShowToast(true);
+        });
     } else {
       setToastMessage("Ticket updated successfully");
       setShowToast(true);
@@ -90,33 +115,40 @@ export default function UserTicketsPage() {
     <div className="mx-auto w-full">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-dark">
         <TicketTable
-            title="My Tickets"
-            subtitle="View and track the status of your reported tickets."
-            tickets={currentTickets}
-            hideAssignedTo={true}
-            onActionClick={handleActionClick}
-            onCreateClick={() => router.push("/incident-catalog")}
-            onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
-            onStatusFilterChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
-          />
+          title="My Tickets"
+          subtitle="View and track the status of your reported tickets."
+          tickets={currentTickets}
+          hideAssignedTo={true}
+          onActionClick={handleActionClick}
+          onCreateClick={() => router.push("/incident-catalog")}
+          onSearchChange={(val) => {
+            setSearchQuery(val);
+            setCurrentPage(1);
+          }}
+          onStatusFilterChange={(val) => {
+            setStatusFilter(val);
+            setCurrentPage(1);
+          }}
+          onPriorityFilterChange={(val) => {
+            setPriorityFilter(val);
+            setCurrentPage(1);
+          }}
+        />
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            totalResults={tickets.length}
-            resultsPerPage={itemsPerPage}
-          />
-        </div>
-
-        <Toast
-          isOpen={showToast}
-          onClose={() => setShowToast(false)}
-          message={toastMessage}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalResults={tickets.length}
+          resultsPerPage={itemsPerPage}
         />
       </div>
+
+      <Toast
+        isOpen={showToast}
+        onClose={() => setShowToast(false)}
+        message={toastMessage}
+      />
+    </div>
   );
 }
-
-
-

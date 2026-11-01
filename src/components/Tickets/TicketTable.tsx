@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { TicketRow, Ticket } from "./TicketRow";
 import { useRole } from "@/app/role-context";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface TicketTableProps {
   tickets: Ticket[];
@@ -13,12 +14,11 @@ interface TicketTableProps {
   onActionClick: (action: string, ticket: Ticket) => void;
   onCreateClick?: () => void;
   onStatusFilterChange?: (status: string) => void;
+  onPriorityFilterChange?: (priority: string) => void;
   onSearchChange?: (value: string) => void;
   hideAssignedTo?: boolean;
   showCompletedDate?: boolean;
 }
-
-import { PageHeader } from "@/components/ui/PageHeader";
 
 export function TicketTable({
   tickets,
@@ -27,12 +27,13 @@ export function TicketTable({
   onActionClick,
   onCreateClick,
   onStatusFilterChange,
+  onPriorityFilterChange,
   onSearchChange,
   hideAssignedTo = false,
   showCompletedDate = false,
 }: TicketTableProps) {
   const { role } = useRole();
-  const isAuthorizedToCreate = role === 'admin' || role === 'user';
+  const isAuthorizedToCreate = role === "admin" || role === "user";
 
   return (
     <>
@@ -60,16 +61,30 @@ export function TicketTable({
             className="w-full border-gray-300"
           />
         </div>
-        <select
-          aria-label="Filter by status"
-          onChange={(e) => onStatusFilterChange?.(e.target.value)}
-          className="w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        >
-          <option value="ALL">All Status</option>
-          <option value="PENDING">Pending</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
+        {onStatusFilterChange && (
+          <select
+            aria-label="Filter by status"
+            onChange={(e) => onStatusFilterChange?.(e.target.value)}
+            className="w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          >
+            <option value="ALL">All Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+        )}
+        {onPriorityFilterChange && (
+          <select
+            aria-label="Filter by priority"
+            onChange={(e) => onPriorityFilterChange?.(e.target.value)}
+            className="w-full sm:w-auto rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          >
+            <option value="ALL">All Priorities</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        )}
       </PageHeader>
 
       <Table>
@@ -90,7 +105,10 @@ export function TicketTable({
         <TableBody>
           {tickets.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8 + (hideAssignedTo ? 0 : 1) + (showCompletedDate ? 1 : 0)} className="py-8 text-center text-sm text-gray-500">
+              <TableCell
+                colSpan={8 + (hideAssignedTo ? 0 : 1) + (showCompletedDate ? 1 : 0)}
+                className="py-8 text-center text-sm text-gray-500"
+              >
                 No tickets found.
               </TableCell>
             </TableRow>

@@ -5,9 +5,10 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
   departmentId: string | number;
   role: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
 }
 
 export interface AuthState {
@@ -31,6 +32,11 @@ export const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
     },
+    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
     clearAuth: (state) => {
       state.user = null;
       state.refreshToken = null;
@@ -39,7 +45,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearAuth } = authSlice.actions;
+export const { setUser, updateUserProfile, clearAuth } = authSlice.actions;
 
 export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectCurrentRole = (state: { auth: AuthState }) => state.auth.user?.role || null;

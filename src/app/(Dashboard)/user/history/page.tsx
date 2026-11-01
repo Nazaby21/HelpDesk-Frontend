@@ -9,35 +9,43 @@ import { Ticket, TicketPriority, TicketStatus } from "@/components/Tickets/Ticke
 import { useGetTicketHistoryQuery, TicketResponse } from "@/redux/feature/ticket/ticketApi";
 import { formatDate } from "@/utils/date";
 
-
 const statusMap: Record<string, TicketStatus> = {
-  PENDING: 'Pending',
-  IN_PROGRESS: 'In Progress',
-  COMPLETED: 'Completed',
+  PENDING: "Pending",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
 };
+
+const priorityMap: Record<string, TicketPriority> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+};
+
 export default function UserHistoryPage() {
   const router = useRouter();
-  
   const { data: ticketResponses = [], isLoading } = useGetTicketHistoryQuery();
-
-
 
   const [showToast, setShowToast] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [priorityFilter, setPriorityFilter] = useState("ALL");
   const itemsPerPage = 7;
 
   const tickets: Ticket[] = useMemo(() => {
     let mapped = ticketResponses.map((tr: TicketResponse) => {
       const status: TicketStatus = statusMap[tr.status] ?? "Completed";
+      const priority: TicketPriority = priorityMap[tr.priority] ?? "Medium";
       return {
         id: `#TCK-${tr.id.toString().padStart(3, "0")}`,
         rawId: tr.id.toString(),
         title: tr.ticketTitle,
         requester: { name: tr.createdByName || "Unknown", email: "" },
         department: tr.categoryName || "General",
-        priority: (tr.priority as TicketPriority) || "Medium",
+        priority,
         status,
         assignedTo: tr.assignedName ? { name: tr.assignedName } : null,
         createdDate: formatDate(tr.createdAt),
@@ -45,12 +53,18 @@ export default function UserHistoryPage() {
       };
     });
 
-    // Filter by status
     if (statusFilter !== "ALL") {
-      mapped = mapped.filter((t) => t.status.toUpperCase().replace(" ", "_") === statusFilter);
+      mapped = mapped.filter(
+        (t) => t.status.toUpperCase().replace(" ", "_") === statusFilter
+      );
     }
 
-    // Filter by search
+    if (priorityFilter !== "ALL") {
+      mapped = mapped.filter(
+        (t) => t.priority.toUpperCase() === priorityFilter
+      );
+    }
+
     if (searchQuery.trim()) {
       const lowerQ = searchQuery.toLowerCase();
       mapped = mapped.filter(
@@ -62,16 +76,16 @@ export default function UserHistoryPage() {
     }
 
     return mapped;
-  }, [ticketResponses, statusFilter, searchQuery]);
+  }, [ticketResponses, statusFilter, priorityFilter, searchQuery]);
 
-  // Pagination slicing
   const totalPages = Math.ceil(tickets.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentTickets = tickets.slice(startIndex, startIndex + itemsPerPage);
 
   const handleActionClick = (action: string, ticket: Ticket) => {
+    const rawId = ticket.rawId ?? ticket.id.replace("#TCK-", "");
     if (action === "view") {
-      router.push(`/tickets/${(ticket as any).rawId ?? ticket.id.replace("#TCK-", "")}`);
+      router.push(`/tickets/${rawId}`);
     } else {
       setShowToast(true);
     }
@@ -83,33 +97,40 @@ export default function UserHistoryPage() {
     <div className="mx-auto w-full">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-dark">
         <TicketTable
-            title="Ticket History"
-            subtitle="View your past resolved or closed tickets."
-            tickets={currentTickets}
-            onActionClick={handleActionClick}
-            onCreateClick={() => router.push("/incident-catalog")}
-            onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
-            onStatusFilterChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}
-            showCompletedDate={true}
-          />
+          title="Ticket History"
+          subtitle="View your past resolved or closed tickets."
+          tickets={currentTickets}
+          onActionClick={handleActionClick}
+          onCreateClick={() => router.push("/incident-catalog")}
+          onSearchChange={(val) => {
+            setSearchQuery(val);
+            setCurrentPage(1);
+          }}
+          onStatusFilterChange={(val) => {
+            setStatusFilter(val);
+            setCurrentPage(1);
+          }}
+          onPriorityFilterChange={(val) => {
+            setPriorityFilter(val);
+            setCurrentPage(1);
+          }}
+          showCompletedDate={true}
+        />
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            totalResults={tickets.length}
-            resultsPerPage={itemsPerPage}
-          />
-        </div>
-
-        <Toast
-          isOpen={showToast}
-          onClose={() => setShowToast(false)}
-          message="Ticket action successful"
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalResults={tickets.length}
+          resultsPerPage={itemsPerPage}
         />
       </div>
+
+      <Toast
+        isOpen={showToast}
+        onClose={() => setShowToast(false)}
+        message="Ticket action successful"
+      />
+    </div>
   );
 }
-
-
-

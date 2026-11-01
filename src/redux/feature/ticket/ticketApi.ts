@@ -51,6 +51,24 @@ export interface NotificationResponse {
   createdAt: string;
 }
 
+export interface TicketStatusLogResponse {
+  id: number;
+  ticketId: number;
+  oldStatus: string;
+  newStatus: string;
+  changedBy: string;
+  changedAt: string;
+  remark: string | null;
+}
+
+export interface TicketHistoryAuditResponse {
+  id: number;
+  action: string;
+  comment: string;
+  performAt: string;
+  ticketId: number;
+}
+
 export const ticketApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getTickets: builder.query<TicketResponse[], void>({
@@ -69,6 +87,32 @@ export const ticketApi = api.injectEndpoints({
     }),
     getTicketMessages: builder.query<ChatMessage[], string | number>({
       query: (id) => `tickets/${id}/messages`,
+      providesTags: (result, error, id) => [{ type: "Ticket", id }],
+    }),
+    sendTicketMessage: builder.mutation<ChatMessage, { ticketId: string | number; senderId?: number; sender?: string; content: string }>({
+      query: ({ ticketId, ...body }) => ({
+        url: `tickets/${ticketId}/messages`,
+        method: "POST",
+        body: { ticketId: Number(ticketId), ...body },
+      }),
+      invalidatesTags: (result, error, { ticketId }) => [{ type: "Ticket", id: ticketId }],
+    }),
+    getTicketStatusLogs: builder.query<TicketStatusLogResponse[], string | number>({
+      query: (id) => `tickets/${id}/status-logs`,
+      transformResponse: (response: any) => {
+        if (Array.isArray(response)) return response;
+        if (response?.content) return response.content;
+        return [];
+      },
+      providesTags: (result, error, id) => [{ type: "Ticket", id }],
+    }),
+    getTicketAuditHistory: builder.query<TicketHistoryAuditResponse[], string | number>({
+      query: (id) => `history/ticket/${id}`,
+      transformResponse: (response: any) => {
+        if (Array.isArray(response)) return response;
+        if (response?.content) return response.content;
+        return [];
+      },
       providesTags: (result, error, id) => [{ type: "Ticket", id }],
     }),
     getMyTickets: builder.query<TicketResponse[], void>({
@@ -120,6 +164,13 @@ export const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
+    deleteTicket: builder.mutation<void, string | number>({
+      query: (id) => ({
+        url: `tickets/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
     uploadImage: builder.mutation<{ url: string }, FormData>({
       query: (formData) => ({
         url: "images/upload",
@@ -134,13 +185,17 @@ export const {
   useGetTicketsQuery, 
   useGetTicketHistoryQuery, 
   useGetTicketByIdQuery, 
-  useGetTicketMessagesQuery, 
+  useGetTicketMessagesQuery,
+  useSendTicketMessageMutation,
+  useGetTicketStatusLogsQuery,
+  useGetTicketAuditHistoryQuery,
   useGetMyTicketsQuery, 
   useGetDashboardStatsQuery, 
   useGetMonthlyStatsQuery, 
   useGetActivityFeedQuery, 
   useCreateTicketMutation, 
   useUpdateTicketMutation,
-  useUpdateTicketStatusMutation, 
+  useUpdateTicketStatusMutation,
+  useDeleteTicketMutation,
   useUploadImageMutation 
 } = ticketApi;

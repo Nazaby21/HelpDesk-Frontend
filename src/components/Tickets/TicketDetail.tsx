@@ -2,10 +2,18 @@
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, XCircle, Edit, Trash2, History, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Toast } from "@/components/ui/Toast";
-import { useGetTicketByIdQuery, useUpdateTicketStatusMutation } from "@/redux/feature/ticket/ticketApi";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import {
+  useGetTicketByIdQuery,
+  useGetTicketStatusLogsQuery,
+  useGetTicketAuditHistoryQuery,
+  useUpdateTicketStatusMutation,
+  useDeleteTicketMutation,
+} from "@/redux/feature/ticket/ticketApi";
 import { useRole } from "@/app/role-context";
 import { TicketChat } from "./TicketChat";
 import { formatDateTime } from "@/utils/date";
@@ -27,9 +35,15 @@ export default function TicketDetail() {
   const ticketId = params.id as string;
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
+  const [closeRemark, setCloseRemark] = useState("Issue resolved.");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { data: ticketResponse, isLoading } = useGetTicketByIdQuery(ticketId);
+  const { data: statusLogs = [] } = useGetTicketStatusLogsQuery(ticketId);
+  const { data: auditHistory = [] } = useGetTicketAuditHistoryQuery(ticketId);
   const [updateStatus, { isLoading: isUpdating }] = useUpdateTicketStatusMutation();
+  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
 
   const ticket = React.useMemo(() => {
     if (!ticketResponse) return null;
@@ -46,11 +60,13 @@ export default function TicketDetail() {
       description: ticketResponse.description || "No description provided.",
       requester: { name: ticketResponse.createdByName || "Requester", email: "" },
       department: ticketResponse.categoryName || "General",
+      subCategoryName: ticketResponse.subCategoryName || null,
       priority: ticketResponse.priority || "Medium",
       rawStatus: ticketResponse.status,
       status,
       assignedTo: ticketResponse.assignedName ? { name: ticketResponse.assignedName } : null,
       created: ticketResponse.createdAt ? formatDateTime(ticketResponse.createdAt) : "Unknown",
+      completedAt: ticketResponse.completedAt ? formatDateTime(ticketResponse.completedAt) : null,
       imageUrl: ticketResponse.imageUrl,
       imageUrls: ticketResponse.imageUrls || [],
     };
@@ -58,8 +74,12 @@ export default function TicketDetail() {
 
   const handleAccept = async () => {
     try {
-      await updateStatus({ id: ticketId, status: "IN_PROGRESS" }).unwrap();
-      setToastMessage("Ticket accepted successfully!");
+      await updateStatus({
+        id: ticketId,
+        status: "IN_PROGRESS",
+        remark: `Accepted by ${role}`,
+      }).unwrap();
+      setToastMessage("Ticket accepted and moved to In Progress!");
       setShowToast(true);
     } catch (err: any) {
       setToastMessage(err?.data?.message || "Failed to accept ticket.");
@@ -67,9 +87,14 @@ export default function TicketDetail() {
     }
   };
 
-  const handleClose = async () => {
+  const handleConfirmClose = async () => {
     try {
-      await updateStatus({ id: ticketId, status: "COMPLETED" }).unwrap();
+      await updateStatus({
+        id: ticketId,
+        status: "COMPLETED",
+        remark: closeRemark.trim() || "Issue resolved.",
+      }).unwrap();
+      setIsCloseModalOpen(false);
       setToastMessage("Ticket closed successfully!");
       setShowToast(true);
     } catch (err: any) {
@@ -78,10 +103,28 @@ export default function TicketDetail() {
     }
   };
 
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteTicket(ticketId).unwrap();
+      setIsDeleteModalOpen(false);
+      setToastMessage("Ticket deleted successfully!");
+      setShowToast(true);
+      setTimeout(() => {
+        router.push(role === "user" ? "/user/tickets" : "/tickets");
+      }, 800);
+    } catch (err: any) {
+      setIsDeleteModalOpen(false);
+      setToastMessage(err?.data?.message || "Failed to delete ticket.");
+      setShowToast(true);
+    }
+  };
+
   if (isLoading) return <div className="p-8">Loading ticket details...</div>;
   if (!ticket) return <div className="p-8">Ticket not found</div>;
 
   const pBadgeVariant = priorityVariant[ticket.priority] ?? "default";
+  const canManageStatus = role === "technician" || role === "admin";
+  const canEditOrDelete = ticket.rawStatus !== "COMPLETED" && (role === "admin" || role === "user");
 
   return (
     <>
@@ -98,18 +141,35 @@ export default function TicketDetail() {
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-500">
-                  {ticket.id}
-                </span>
+                <span className="text-sm font-medium text-gray-500">{ticket.id}</span>
                 <Badge variant="info">{ticket.status}</Badge>
                 <Badge variant={pBadgeVariant}>{ticket.priority}</Badge>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{ticket.title}</h1>
             </div>
 
-            {/* Role-based action buttons */}
-            <div className="flex items-center gap-3">
-              {role === "technician" && ticket.rawStatus === "PENDING" && (
+            {/* Action buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              {canEditOrDelete && (
+                <>
+                  <button
+                    onClick={() => router.push(`/tickets/${ticket.rawId}/edit`)}
+                    className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    disabled={isDeleting}
+                    className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-medium text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </>
+              )}
+              {canManageStatus && ticket.rawStatus === "PENDING" && (
                 <button
                   onClick={handleAccept}
                   disabled={isUpdating}
@@ -119,9 +179,9 @@ export default function TicketDetail() {
                   {isUpdating ? "Accepting…" : "Accept"}
                 </button>
               )}
-              {role === "technician" && ticket.rawStatus === "IN_PROGRESS" && (
+              {canManageStatus && ticket.rawStatus !== "COMPLETED" && (
                 <button
-                  onClick={handleClose}
+                  onClick={() => setIsCloseModalOpen(true)}
                   disabled={isUpdating}
                   className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
@@ -148,9 +208,10 @@ export default function TicketDetail() {
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-500">Department</div>
+              <div className="text-sm text-gray-500">Category</div>
               <div className="mt-1 font-medium text-gray-900 dark:text-white">
                 {ticket.department}
+                {ticket.subCategoryName ? ` / ${ticket.subCategoryName}` : ""}
               </div>
             </div>
             <div>
@@ -170,15 +231,22 @@ export default function TicketDetail() {
             <div className="prose prose-sm max-w-none text-gray-600 dark:text-gray-400">
               <p>{ticket.description}</p>
             </div>
-            
+
             {/* Legacy Fallback: Singular Image */}
             {ticket.imageUrl && ticket.imageUrls.length === 0 && (
               <div className="mt-8">
-                <h4 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">Attachment</h4>
-                <a href={ticket.imageUrl} target="_blank" rel="noopener noreferrer" className="block relative group w-max">
-                  <img 
-                    src={ticket.imageUrl} 
-                    alt="Ticket attachment" 
+                <h4 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
+                  Attachment
+                </h4>
+                <a
+                  href={ticket.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block relative group w-max"
+                >
+                  <img
+                    src={ticket.imageUrl}
+                    alt="Ticket attachment"
                     className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-xl border border-gray-200 shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-xl" />
@@ -186,21 +254,30 @@ export default function TicketDetail() {
               </div>
             )}
 
-            {/* New Multi-Image Support */}
+            {/* Multi-Image Support */}
             {ticket.imageUrls.length > 0 && (
               <div className="mt-8">
                 <h4 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   Attachments
-                  <Badge variant="default" className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <Badge
+                    variant="default"
+                    className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
                     {ticket.imageUrls.length}
                   </Badge>
                 </h4>
                 <div className="flex flex-wrap gap-4">
                   {ticket.imageUrls.map((url: string, idx: number) => (
-                    <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block relative group">
-                      <img 
-                        src={url} 
-                        alt={`Attachment ${idx + 1}`} 
+                    <a
+                      key={idx}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block relative group"
+                    >
+                      <img
+                        src={url}
+                        alt={`Attachment ${idx + 1}`}
                         className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-xl border border-gray-200 shadow-sm transition-all group-hover:scale-105 group-hover:shadow-md"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-xl" />
@@ -210,11 +287,131 @@ export default function TicketDetail() {
               </div>
             )}
           </div>
-          
+
+          {/* Status Transition Logs & Ticket Audit History */}
+          {(statusLogs.length > 0 || auditHistory.length > 0) && (
+            <div className="mt-8 grid gap-6 border-t border-gray-100 dark:border-dark-3 pt-8 lg:grid-cols-2">
+              <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5 dark:border-dark-3 dark:bg-gray-800/40">
+                <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
+                  <Activity className="h-4 w-4 text-blue-500" />
+                  Status Lifecycle Logs ({statusLogs.length})
+                </h3>
+                {statusLogs.length === 0 ? (
+                  <p className="text-sm text-gray-500">No status transitions recorded yet.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {statusLogs.map((log) => (
+                      <li
+                        key={log.id}
+                        className="rounded-lg border border-gray-200/80 bg-white p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {log.oldStatus ? `${log.oldStatus} → ${log.newStatus}` : log.newStatus}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {log.changedAt ? formatDateTime(log.changedAt) : ""}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                          By <span className="font-medium">{log.changedBy}</span>
+                          {log.remark ? ` — "${log.remark}"` : ""}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5 dark:border-dark-3 dark:bg-gray-800/40">
+                <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
+                  <History className="h-4 w-4 text-indigo-500" />
+                  Ticket Audit History ({auditHistory.length})
+                </h3>
+                {auditHistory.length === 0 ? (
+                  <p className="text-sm text-gray-500">No audit history entries found.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {auditHistory.map((item) => (
+                      <li
+                        key={item.id}
+                        className="rounded-lg border border-gray-200/80 bg-white p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
+                      >
+                        <div className="flex items-center justify-between">
+                          <Badge variant="default">{item.action}</Badge>
+                          <span className="text-xs text-gray-500">
+                            {item.performAt ? formatDateTime(item.performAt) : ""}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-xs text-gray-700 dark:text-gray-300">
+                          {item.comment}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Real-time Ticket Chat */}
           <TicketChat ticketId={ticket.rawId} />
         </div>
       </div>
+
+      {/* Close Ticket Remark Modal */}
+      <Modal
+        isOpen={isCloseModalOpen}
+        onClose={() => setIsCloseModalOpen(false)}
+        title="Close Ticket"
+        description="Provide a resolution remark before marking this ticket as Completed."
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Resolution Remark
+            </label>
+            <textarea
+              rows={3}
+              value={closeRemark}
+              onChange={(e) => setCloseRemark(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              placeholder="Describe how the issue was resolved..."
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsCloseModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmClose} disabled={isUpdating}>
+              {isUpdating ? "Closing..." : "Confirm Close"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Ticket Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Ticket"
+        description={`Are you sure you want to delete ${ticket.id}? This action cannot be undone.`}
+        maxWidth="sm"
+      >
+        <div className="flex justify-end gap-3 pt-4">
+          <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+            Cancel
+          </Button>
+          <button
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting..." : "Delete Ticket"}
+          </button>
+        </div>
+      </Modal>
 
       <Toast
         isOpen={showToast}
@@ -224,4 +421,3 @@ export default function TicketDetail() {
     </>
   );
 }
-

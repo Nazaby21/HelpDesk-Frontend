@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, ListTree, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, ListTree, Trash2, Edit, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
 import { PageHeader } from "@/components/ui/PageHeader";
 import {
   useGetCategoriesQuery,
+  useUpdateCategoryMutation,
   useDeleteCategoryMutation,
 } from "@/redux/feature/category/categoryApi";
 import { CreateCategoryModal } from "./CreateCategoryModal";
@@ -19,12 +21,24 @@ interface DeleteTarget {
   isSub: boolean;
 }
 
+interface EditTarget {
+  id: number | string;
+  name: string;
+  description?: string;
+  parentId?: number | null;
+  isSub: boolean;
+}
+
 export function CategoryManager({ role }: { role: UserRole }) {
-  const { data: categories = [], isLoading, isError, error, refetch } = useGetCategoriesQuery();
+  const { data: categories = [], isLoading, isError, refetch } = useGetCategoriesQuery();
+  const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error" | "info">("success");
@@ -41,7 +55,37 @@ export function CategoryManager({ role }: { role: UserRole }) {
     setIsModalOpen(true);
   };
 
-  const handleDeleteClick	 = (id: number | string, name: string, isSub: boolean) => {
+  const handleEditClick = (target: EditTarget) => {
+    setEditTarget(target);
+    setEditName(target.name);
+    setEditDescription(target.description || "");
+  };
+
+  const handleEditConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget || !editName.trim()) return;
+
+    try {
+      await updateCategory({
+        id: editTarget.id,
+        data: {
+          name: editName.trim(),
+          description: editDescription.trim() || undefined,
+          parentId: editTarget.parentId ?? null,
+        },
+      }).unwrap();
+      setEditTarget(null);
+      setToastType("success");
+      setToastMessage("Category updated successfully");
+      setShowToast(true);
+    } catch (err: any) {
+      setToastType("error");
+      setToastMessage(err?.data?.message || "Failed to update category");
+      setShowToast(true);
+    }
+  };
+
+  const handleDeleteClick = (id: number | string, name: string, isSub: boolean) => {
     setDeleteTarget({ id, name, isSub });
   };
 
@@ -84,7 +128,11 @@ export function CategoryManager({ role }: { role: UserRole }) {
           <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 bg-red-50 p-8 text-center text-red-600 dark:border-red-900/50 dark:bg-red-900/10">
             <AlertTriangle className="mb-2 h-8 w-8" />
             <p className="mb-4">Failed to load categories.</p>
-            <Button onClick={() => refetch()} variant="outline" className="border-red-200 hover:bg-red-100 hover:text-red-700">
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
+              className="border-red-200 hover:bg-red-100 hover:text-red-700"
+            >
               Retry
             </Button>
           </div>
@@ -107,7 +155,7 @@ export function CategoryManager({ role }: { role: UserRole }) {
                       {main.name}
                     </h3>
                     {main.description && (
-                      <p 
+                      <p
                         className="mt-1 text-sm text-gray-500 line-clamp-2"
                         title={main.description}
                       >
@@ -115,14 +163,32 @@ export function CategoryManager({ role }: { role: UserRole }) {
                       </p>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleDeleteClick(main.id, main.name, false)}
-                    className="ml-2 shrink-0 rounded-md p-2 min-h-[32px] min-w-[32px] flex items-center justify-center text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                    title="Delete category"
-                    aria-label={`Delete category ${main.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="ml-2 flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() =>
+                        handleEditClick({
+                          id: main.id,
+                          name: main.name,
+                          description: main.description,
+                          parentId: null,
+                          isSub: false,
+                        })
+                      }
+                      className="rounded-md p-2 min-h-[32px] min-w-[32px] flex items-center justify-center text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20"
+                      title="Edit category"
+                      aria-label={`Edit category ${main.name}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(main.id, main.name, false)}
+                      className="rounded-md p-2 min-h-[32px] min-w-[32px] flex items-center justify-center text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                      title="Delete category"
+                      aria-label={`Delete category ${main.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-auto space-y-3 pt-4 border-t border-gray-50 dark:border-gray-800/50">
@@ -147,17 +213,33 @@ export function CategoryManager({ role }: { role: UserRole }) {
                         key={sub.id}
                         className="flex items-center justify-between rounded-md bg-white px-3 py-2 text-sm shadow-sm border border-gray-100 dark:border-gray-700 dark:bg-gray-800"
                       >
-                        <span className="text-gray-700 dark:text-gray-200">
-                          {sub.name}
-                        </span>
-                        <button
-                          onClick={() => handleDeleteClick(sub.id, sub.name, true)}
-                          className="shrink-0 rounded-md p-2 min-h-[32px] min-w-[32px] flex items-center justify-center text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                          title="Delete sub-issue"
-                          aria-label={`Delete sub-issue ${sub.name}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <span className="text-gray-700 dark:text-gray-200">{sub.name}</span>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            onClick={() =>
+                              handleEditClick({
+                                id: sub.id,
+                                name: sub.name,
+                                description: sub.description,
+                                parentId: Number(main.id),
+                                isSub: true,
+                              })
+                            }
+                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20"
+                            title="Edit sub-issue"
+                            aria-label={`Edit sub-issue ${sub.name}`}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(sub.id, sub.name, true)}
+                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                            title="Delete sub-issue"
+                            aria-label={`Delete sub-issue ${sub.name}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </li>
                     ))}
                     {subcategories.length === 0 && (
@@ -185,6 +267,48 @@ export function CategoryManager({ role }: { role: UserRole }) {
         }
       />
 
+      {/* Edit Category / Sub-Issue Modal */}
+      <Modal
+        isOpen={editTarget !== null}
+        onClose={() => setEditTarget(null)}
+        title={editTarget?.isSub ? "Edit Sub-Issue" : "Edit Category"}
+        maxWidth="sm"
+      >
+        <form onSubmit={handleEditConfirm} className="space-y-4">
+          <Input
+            id="edit-cat-name"
+            label={editTarget?.isSub ? "Sub-Issue Name" : "Category Name"}
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            required
+          />
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Description (Optional)
+            </label>
+            <textarea
+              className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-900 outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              rows={3}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditTarget(null)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isUpdating}>
+              {isUpdating ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteTarget !== null}
@@ -198,9 +322,9 @@ export function CategoryManager({ role }: { role: UserRole }) {
               <AlertTriangle className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-200">
                 Are you sure you want to delete{" "}
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 dark:text-white">
                   &quot;{deleteTarget?.name}&quot;
                 </span>
                 ?
@@ -246,11 +370,11 @@ export function CategoryManager({ role }: { role: UserRole }) {
         </div>
       </Modal>
 
-      <Toast 
-        isOpen={showToast} 
-        onClose={() => setShowToast(false)} 
-        message={toastMessage} 
-        type={toastType} 
+      <Toast
+        isOpen={showToast}
+        onClose={() => setShowToast(false)}
+        message={toastMessage}
+        type={toastType}
       />
     </div>
   );
