@@ -50,5 +50,6 @@ export const { setUser, updateUserProfile, clearAuth } = authSlice.actions;
 export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectCurrentRole = (state: { auth: AuthState }) => state.auth.user?.role || null;
 export const selectRefreshToken = (state: { auth: AuthState }) => state.auth.refreshToken;
+export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
 
 export default authSlice.reducer;

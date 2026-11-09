@@ -1,6 +1,6 @@
 import * as Icons from "../icons";
 import { UserRole } from "@/app/role-context";
-import { AlertTriangle, LayoutGrid, Building2 } from "lucide-react";
+import { AlertTriangle, LayoutGrid, Building2, Bell } from "lucide-react";
 
 export interface NavItem {
   title: string;
@@ -67,6 +67,13 @@ export const getNavData = (role: UserRole): NavSection[] => {
           url: "/incident-catalog",
           icon: Icons.Alphabet,
           roles: ["admin", "technician"],
+          items: [] as any[],
+        },
+        {
+          title: "Notifications",
+          url: "/notifications",
+          icon: Bell,
+          roles: ["admin", "technician", "user"],
           items: [] as any[],
         },
       ],
